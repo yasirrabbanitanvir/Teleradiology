@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <!--<meta name="viewport" content="width=device-width, initial-scale=1.0">-->
+  <title>Admin Dashboard</title>
+  <link rel="stylesheet" href="/static/styles/styles.css">
+</head>
+<body>
+  <div class="form-container">
+    <h1>Admin Dashboard</h1>
+    <button onclick="createUser()">Create User</button>
+    <button onclick="createCenter()">Create Center</button>
+    <button onclick="logout()">Logout</button>
+    <div id="admin-message" class="hidden"></div>
+  </div>
+  <script>
+    const baseUrl = window.location.origin;
+    const token = localStorage.getItem('token');
+
+    async function createUser() {
+      const username = prompt('Enter username:');
+      const password = prompt('Enter password:');
+      const role = prompt('Enter role (Admin/SubAdmin/Center/Doctor):');
+      const centerId = role === 'Center' ? prompt('Enter Center ID:') : null;
+
+      try {
+        const res = await fetch(`${baseUrl}/api/users/`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Token ${token}`
+          },
+          body: JSON.stringify({ username, password, role, center: centerId })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || 'Failed to create user');
+        alert('User created successfully');
+      } catch (err) {
+        document.getElementById('admin-message').textContent = `❌ ${err.message}`;
+        document.getElementById('admin-message').className = 'error';
+      }
+    }
+
+    async function createCenter() {
+      const name = prompt('Enter center name:');
+      const instituteName = prompt('Enter institute name:');
+      const isDefault = confirm('Is this a default center?');
+
+      try {
+        const res = await fetch(`${baseUrl}/api/centers/`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Token ${token}`
+          },
+          body: JSON.stringify({ name, institute_name: instituteName, is_default: isDefault })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || 'Failed to create center');
+        alert('Center created successfully');
+      } catch (err) {
+        document.getElementById('admin-message').textContent = `❌ ${err.message}`;
+        document.getElementById('admin-message').className = 'error';
+      }
+    }
+
+    function logout() {
+      localStorage.removeItem('token');
+      localStorage.removeItem('role');
+      window.location.href = 'login.html';
+    }
+  </script>
+</body>
+</html>

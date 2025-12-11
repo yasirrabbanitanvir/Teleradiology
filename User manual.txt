@@ -1,0 +1,178 @@
+PS D:\new_office\my_pacs> cd project_env
+PS D:\new_office\my_pacs\project_env> cd .\Scripts\
+PS D:\new_office\my_pacs\project_env\Scripts> .\activate
+(project_env) PS D:\new_office\my_pacs\project_env\Scripts> cd ../..
+(project_env) PS D:\new_office\my_pacs> cd .\dicom_project\
+(project_env) PS D:\new_office\my_pacs\dicom_project> python manage.py runserver
+
+admin
+
+afsar 
+pass : 12345
+
+subadmin1
+pass: subadminpassword
+
+center1
+pass: centerpassword
+
+center3
+pass: centerpassword
+
+doctor1
+pass: doctorpassword
+
+
+Step 1: Understand the Django Admin Panel
+You’re logged in as afsar (your superuser) at http://127.0.0.1:8000/admin/.
+The left sidebar shows sections like Authentication and Authorization (for users and groups) and Myapp (for your custom models like Centers, Patients, etc.).
+You’ll use the + Add buttons to create new items.
+Step 2: Create Groups (Roles)
+Groups define the roles (Admin, SubAdmin, Center, Doctor). Let’s create them if they’re not already there.
+
+Go to Groups:
+In the sidebar, click on Groups under Authentication and Authorization.
+Add Each Group:
+Click the green + Add button next to Groups.
+In the Name field, type Admin and click Save.
+Repeat this process to add:
+SubAdmin
+Center
+Doctor
+After adding each, click Save and return to the group list.
+Verify Groups:
+You should see Admin, SubAdmin, Center, and Doctor listed. If they’re there, you’re good to go!
+Step 3: Create Centers
+Centers are where patients’ data will be managed. Let’s add a couple.
+
+Go to Centers:
+In the sidebar, click on Centers under Myapp.
+Add a Center:
+Click the green + Add button next to Centers.
+Fill in the fields:
+Name: Type Center1
+Institute name: Type Hospital1
+Is default: Check the box (click the checkbox)
+Click Save.
+Add Another Center (Optional):
+Click + Add again.
+Fill in:
+Name: Type Center2
+Institute name: Type Hospital2
+Is default: Leave unchecked
+Click Save.
+Verify Centers:
+You should see Center1 and Center2 in the list.
+Step 4: Create Users and Assign Roles
+Now, let’s create users for each role and link them to the right groups and centers.
+
+Go to Users:
+In the sidebar, click on Users under Authentication and Authorization.
+Add a SubAdmin User:
+Click the green + Add button next to Users.
+Fill in:
+Username: Type subadmin1
+Password: Type subadminpassword (at least 8 characters)
+Password (again): Type subadminpassword again
+(Optional) Email: Type subadmin1@example.com
+Click Save.
+Add a Center User:
+Click + Add again.
+Fill in:
+Username: Type center1
+Password: Type centerpassword
+Password (again): Type centerpassword again
+(Optional) Email: Type center1@example.com
+Click Save.
+Add a Doctor User:
+Click + Add again.
+Fill in:
+Username: Type doctor1
+Password: Type doctorpassword
+Password (again): Type doctorpassword again
+(Optional) Email: Type doctor1@example.com
+Click Save.
+Assign Roles via User Profiles:
+In the sidebar, click on User profiles under Myapp.
+Click the green + Add button next to User profiles.
+For subadmin1:
+User: Select subadmin1 from the dropdown
+Role: Select SubAdmin from the dropdown
+Leave Center blank
+Click Save.
+For center1:
+User: Select center1
+Role: Select Center
+Center: Select Center1 from the dropdown
+Click Save.
+For doctor1:
+User: Select doctor1
+Role: Select Doctor
+Leave Center blank
+Click Save.
+Link Center User to Center:
+Go back to Centers under Myapp.
+Click on Center1 to edit it.
+In the User dropdown, select center1.
+Click Save.
+Step 5: Log Out and Log In as Different Roles
+You need to log out of the Admin session to test other users.
+
+Log Out from Admin:
+In the top-right corner of the Django admin panel, click your username (afsar) and select Log out.
+Clear Local Storage (Optional):
+Open your browser’s Developer Tools (press F12).
+Go to the Application tab.
+Under Local Storage > http://127.0.0.1:8000, right-click and select Clear to remove the old token and role.
+Log In as SubAdmin:
+Go to http://127.0.0.1:8000/static/login.html.
+Enter:
+Username: subadmin1
+Password: subadminpassword
+Click Login.
+You should be redirected to http://127.0.0.1:8000/static/index.html. Explore the SubAdmin dashboard (e.g., assign doctors).
+Log In as Center:
+Log out (click Log Off on index.html if available, or clear localStorage again).
+Go to http://127.0.0.1:8000/static/login.html.
+Enter:
+Username: center1
+Password: centerpassword
+Click Login.
+You should be redirected to http://127.0.0.1:8000/static/index.html. Click "Patient Entry" to go to form.html and add a patient.
+Log In as Doctor:
+Log out again.
+Go to http://127.0.0.1:8000/static/login.html.
+Enter:
+Username: doctor1
+Password: doctorpassword
+Click Login.
+You should be redirected to http://127.0.0.1:8000/static/doctor.html. Select your doctor name and practice uploading a report.
+Step 6: Practice Using the System
+Now, let’s practice with each role:
+
+As Center (center1):
+On index.html, click "Patient Entry" to go to form.html.
+Fill in:
+Name: John Doe
+Age: 30
+Sex: M
+Body Part: Chest
+Modality: CT
+Center and Institute name should auto-fill as Center1 and Hospital1
+Scan Date/Time: Pick a date/time
+Upload a dummy .dcm file (create a text file, rename it to sample.dcm)
+Click Submit and check if the patient appears on index.html.
+As SubAdmin (subadmin1):
+On index.html, find John Doe in the table.
+Check the checkbox next to the patient.
+In the assign panel, select Dr. Alice Smith from the dropdown.
+Click Assign and verify the patient’s status updates.
+As Doctor (doctor1):
+On doctor.html, select Dr. Razib Bari from the dropdown.
+Search for John Doe using filters.
+Click Upload Report, select a dummy .pdf file (create a text file, rename it to report.pdf), and upload it.
+Change the status to Reported and save.
+Step 7: Keep Practicing
+Add more patients, centers, and doctors via the Django admin panel.
+Test the search filters and emergency case checkboxes.
+If something doesn’t work, note the error (e.g., in the browser console with F12) and let me know!

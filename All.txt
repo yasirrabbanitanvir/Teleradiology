@@ -1,0 +1,264 @@
+/home/telesof1/telesoftbangladesh/manage.py collectstatic --noinput
+
+
+/home/telesof1/telesoftbangladesh/manage.py makemigrations
+
+/home/telesof1/telesoftbangladesh/manage.py migrate
+
+
+
+Below is a comprehensive `.md` file for the **MY_PACS** project, crafted based on the provided file structure, code snippets, and image attachment descriptions. This documentation includes an overview, setup instructions, how to run the application, how to use it, and detailed code documentation. It is designed to be self-contained, user-friendly, and well-organized with markdown formatting for clarity.
+
+---
+
+# MY_PACS: A Picture Archiving and Communication System (PACS)
+
+## Overview
+
+**MY_PACS** is a Django-based web application designed to manage medical imaging data, including patient records, DICOM files, and doctor reports. It features role-based access control (RBAC) with four user roles: **Admin**, **SubAdmin**, **Center**, and **Doctor**. The system enables patient data entry, file uploads, study assignments, and report management, with a responsive frontend built using HTML, CSS, and JavaScript, and a robust backend powered by Django and Django REST Framework.
+
+### Key Features
+- **Role-Based Access Control**: Restricts functionality based on user roles (Admin, SubAdmin, Center, Doctor).
+- **Patient Management**: Add, update, and view patient records.
+- **File Uploads**: Supports DICOM files and PDF reports.
+- **Study Assignment**: SubAdmins assign doctors to patient studies.
+- **Search and Filter**: Filter patients by name, ID, status, modality, center, or emergency status.
+- **Responsive Design**: Medical-themed UI with a clean, intuitive interface.
+
+## Project Structure
+
+The project is organized as follows:
+
+```
+MY_PACS/
+├── dicom_project/
+│   ├── dicom_project/
+│   │   ├── __init__.py
+│   │   ├── asgi.py
+│   │   ├── settings.py
+│   │   ├── urls.py
+│   │   └── wsgi.py
+│   ├── media/
+│   │   ├── dicom_files/
+│   │   └── reports/
+│   ├── myapp/
+│   │   ├── migrations/
+│   │   ├── static/
+│   │   │   ├── script/
+│   │   │   │   ├── admin.js
+│   │   │   │   ├── doctor.js
+│   │   │   │   ├── form.js
+│   │   │   │   └── script.js
+│   │   │   └── styles/
+│   │   │       ├── admin.css
+│   │   │       ├── Godcha (https://www.godcha.com) images - free stock photos and videos
+│   │   ├── templates/
+│   │   │   ├── admin.html
+│   │   │   ├── doctor.html
+│   │   │   ├── form.html
+│   │   │   ├── index.html
+│   │   │   └── login.html
+│   │   ├── __init__.py
+│   │   ├── admin.py
+│   │   ├── apps.py
+│   │   ├── models.py
+│   │   ├── permissions.py
+│   │   ├── serializers.py
+│   │   ├── tests.py
+│   │   ├── urls.py
+│   │   └── views.py
+│   └── manage.py
+└── usermanual.txt
+```
+
+## Setup Instructions
+
+### Prerequisites
+- **Python**: 3.8 or higher
+- **Django**: 3.2 or higher
+- **Django REST Framework**: For API functionality
+- **SQLite**: Default database (included with Django)
+- **Git**: For version control (optional)
+- **Web Browser**: Chrome, Firefox, or similar
+
+### Installation Steps
+
+1. **Clone the Repository**
+   Clone the project from a Git repository (if available) or extract the project files to your local machine.
+
+   ```bash
+   git clone <repository-url>
+   cd MY_PACS
+   ```
+
+   Replace `<repository-url>` with the actual repository URL, e.g., `https://github.com/Robin39-AFS/pacs.git`.
+
+2. **Create a Virtual Environment**
+   Set up a virtual environment to isolate dependencies.
+
+   ```bash
+   python -m venv venv
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   ```
+
+3. **Install Dependencies**
+   Install required Python packages.
+
+   ```bash
+   pip install django djangorestframework
+   ```
+
+4. **Apply Database Migrations**
+   Set up the SQLite database by applying migrations.
+
+   ```bash
+   cd dicom_project
+   python manage.py makemigrations
+   python manage.py migrate
+   ```
+
+5. **Create a Superuser**
+   Create an admin account to manage the system.
+
+   ```bash
+   python manage.py createsuperuser
+   ```
+
+   Follow the prompts to set a username (e.g., `afsar`), email, and password.
+
+6. **Collect Static Files**
+   Gather static files for the frontend.
+
+   ```bash
+   python manage.py collectstatic
+   ```
+
+## How to Run
+
+1. **Start the Development Server**
+   Launch the Django server from the `dicom_project` directory.
+
+   ```bash
+   python manage.py runserver
+   ```
+
+   The application will be available at `http://127.0.0.1:8000/`.
+
+2. **Verify Access**
+   - Open a browser and navigate to `http://127.0.0.1:8000/static/login.html`.
+   - Log in with the superuser credentials to ensure the server is running.
+
+## How to Use
+
+### Initial Setup via Django Admin
+
+1. **Access the Admin Panel**
+   Go to `http://127.0.0.1:8000/admin/` and log in with your superuser credentials (e.g., `afsar`).
+
+2. **Create User Roles (Groups)**
+   - Navigate to **Authentication and Authorization > Groups**.
+   - Add the following groups: `Admin`, `SubAdmin`, `Center`, `Doctor`.
+
+3. **Create Centers**
+   - Go to **Myapp > Centers**.
+   - Add a center (e.g., Name: `Center1`, Institute name: `Hospital1`, Is default: `True`).
+
+4. **Create Users and Assign Roles**
+   - Go to **Authentication and Authorization > Users**.
+   - Add users (e.g., `subadmin1`, `center1`, `doctor1`) with passwords.
+   - Go to **Myapp > User profiles** to assign roles:
+     - `subadmin1` → Role: `SubAdmin`
+     - `center1` → Role: `Center`, Center: `Center1`
+     - `doctor1` → Role: `Doctor`
+   - Link `center1` to `Center1` in the **Centers** section by editing `Center1` and selecting `center_literal1st.com) images - free stock photos and videos
+   - Edit `Center1` and assign the user `center1`.
+
+### Using the Application
+
+1. **Log In**
+   - Visit `http://127.0.0.1:8000/static/login.html`.
+   - Log in with a user’s credentials (e.g., `center1`/`centerpassword`).
+   - Redirects based on role:
+     - Admin: `/admin/`
+     - SubAdmin/Center: `/static/index.html`
+     - Doctor: `/static/doctor.html`
+
+2. **As a Center User**
+   - On `index.html`, click **Patient Entry** to access `form.html`.
+   - Add a patient (e.g., Name: `John Doe`, Age: `30`, Sex: `M`, Modality: `CT`, DICOM file: upload a sample `.dcm` file).
+   - Submit and verify the patient appears on `index.html`.
+
+3. **As a SubAdmin**
+   - On `index.html`, locate a patient in the table.
+   - Select the checkbox, choose a doctor (e.g., `Dr. Alice Smith`) from the assign panel, and click **Assign**.
+
+4. **As a Doctor**
+   - On `doctor.html`, select your name (e.g., `Dr. Alice Smith`).
+   - Find a patient, upload a report (e.g., a `.pdf` file), and update the status to `Reported`.
+
+5. **Search and Filter**
+   - Use the search panel on `index.html` or `doctor.html` to filter by name, ID, status, center, modality, or emergency status.
+
+6. **Log Out**
+   - Click **Log Off** to return to the login page.
+
+## Code Documentation
+
+### Backend (Django)
+
+#### Models (`models.py`)
+- **Center**: Defines medical centers with fields like `name`, `institute_name`, `user`, and `is_default`.
+- **UserProfile**: Links a `User` to a `Group` (role) and optionally a `Center`.
+- **Patient**: Stores patient data (e.g., `name`, `patient_id`, `age`, `sex`, `modality`, `scan_datetime`).
+- **DoctorUpload**: Manages file uploads (`dicom_file`, `report_pdf`) tied to a `Patient`.
+
+#### Views (`views.py`)
+- **PatientViewSet**: CRUD operations for patients; custom action `by_patient_id` to fetch by ID.
+- **DoctorUploadViewSet**: Manages uploads, restricted to Doctor and Center roles.
+- **CustomLoginView**: Custom login endpoint returning a token, role, and redirect URL.
+- **UserViewSet**: Admin-only endpoint to manage users (create/delete).
+- **CenterViewSet**: Admin-only endpoint to manage centers.
+
+#### Serializers (`serializers.py`)
+- Serializers for `Center`, `UserProfile`, `Patient`, `DoctorUpload`, and `User` to handle JSON conversion.
+
+#### URLs (`urls.py`)
+- API endpoints:
+  - `/api/patients/`
+  - `/api/uploads/`
+  - `/api/users/`
+  - `/api/centers/`
+  - `/api/login/`
+
+#### Permissions (`permissions.py`)
+- Custom RBAC classes: `AdminPermission`, `SubAdminPermission`, `CenterPermission`, `DoctorPermission`.
+
+### Frontend
+
+#### JavaScript (`static/script/`)
+- **admin.js**: Admin dashboard logic for creating users/centers and listing/deleting users.
+- **doctor.js**: Doctor portal functionality (patient filtering, report uploads, status updates).
+- **form.js**: Patient data entry and file upload for new/existing patients.
+- **script.js**: Main dashboard (`index.html`) logic for study management and doctor assignment.
+
+#### CSS (`static/styles/`)
+- **admin.css**: Styles the admin dashboard with a medical-themed gradient palette.
+- **form.css**: Styles the patient upload form with gradient borders and responsive design.
+- **styles.css**: General styling for dashboards, tables, and search panels.
+
+#### HTML Templates (`templates/`)
+- **admin.html**: Admin dashboard for user/center management.
+- **doctor.html**: Doctor portal for managing assigned studies.
+- **form.html**: Form for patient data and file uploads.
+- **index.html**: Main dashboard for study overview and assignment (SubAdmin).
+- **login.html**: Login page with a responsive, gradient design.
+
+## Additional Notes
+- **File Uploads**: Ensure `media/` directory (`dicom_files/` and `reports/`) is writable.
+- **Testing**: Use dummy `.dcm` and `.pdf` files for practice.
+- **Production**: Replace SQLite with PostgreSQL and configure static file serving (e.g., with Nginx).
+- **User Manual**: Refer to `usermanual.txt` for detailed setup steps.
+
+--- 
+
+This `.md` file provides a complete, standalone guide for the **MY_PACS** project, covering setup, execution, usage, and code details, tailored to the provided code and structure. Let me know if you need further refinements!

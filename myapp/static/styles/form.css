@@ -1,0 +1,247 @@
+/* Global Body & Layout */
+body {
+  font-family:       'Segoe UI', sans-serif;
+  background:        #FFFFFF;
+  color:             #004D40;
+  margin:            0;
+  padding:           40px;
+  display:           flex;
+  justify-content:   center;
+  align-items:       flex-start;
+}
+
+/* Logo */
+.logo {
+  width:             50px;
+}
+
+/* Header */
+header {
+  background:        linear-gradient(90deg, #26A69A 0%, #004D40 100%);
+  color:             #FFFFFF;
+  padding:           12px 20px;
+  box-shadow:        0 2px 4px rgba(0,0,0,0.1);
+}
+
+nav {
+  display:           flex;
+  justify-content:   space-between;
+  align-items:       center;
+}
+
+nav ul {
+  list-style:        none;
+  display:           flex;
+  gap:               0px;
+  padding:           0;
+  margin:            0;
+}
+
+nav ul li a {
+  color:             #FFFFFF;
+  font-weight:       500;
+  text-decoration:   none;
+  font-size:         15px;
+}
+
+nav ul li a:hover {
+  color:             #80CBC4;
+  text-decoration:   underline;
+}
+
+/* Search Panel */
+.search-panel {
+  background:        linear-gradient(90deg, #E0F2F1 0%, #FFFFFF 100%);
+  padding:           16px 20px;
+  display:           flex;
+  gap:               12px;
+  align-items:       center;
+  flex-wrap:         wrap;
+  border-bottom:     1px solid #80CBC4;
+}
+
+.search-panel input,
+.search-panel select {
+  padding:           6px 10px;
+  border:            1px solid #80CBC4;
+  background:        #E0F2F1;
+  color:             #004D40;
+  border-radius:     4px;
+}
+
+.search-panel button {
+  background:        linear-gradient(90deg, #26A69A 0%, #004D40 100%);
+  color:             #FFFFFF;
+  border:            none;
+  padding:           8px 14px;
+  font-weight:       bold;
+  border-radius:     4px;
+  cursor:            pointer;
+  transition:        background 0.3s ease;
+}
+
+.search-panel button:hover {
+  background:        linear-gradient(90deg, #004D40 0%, #26A69A 100%);
+}
+
+/* Studies Table */
+.study-list table {
+  width:             100%;
+  border-collapse:   collapse;
+  background:        #FFFFFF;
+  margin-top:        12px;
+  box-shadow:        0 2px 6px rgba(0,0,0,0.05);
+}
+
+.study-list th {
+  background:        linear-gradient(90deg, #80CBC4 0%, #26A69A 100%);
+  color:             #FFFFFF;
+  padding:           10px;
+  font-size:         12px;
+  text-transform:    uppercase;
+  border-bottom:     1px solid #E0F2F1;
+}
+
+.study-list td {
+  background:        #FFFFFF;
+  color:             #004D40;
+  padding:           12px 10px;
+  border-bottom:     1px solid #E0F2F1;
+  text-align:        center;
+}
+
+.study-list tr:hover td {
+  background:        #E0F2F1;
+}
+
+.emergency-case td {
+  background:        #ffe6e6;
+}
+
+/* Action Buttons */
+.action-btn {
+  background:        linear-gradient(90deg, #26A69A 0%, #004D40 100%);
+  color:             #FFFFFF;
+  font-weight:       bold;
+  padding:           5px 10px;
+  border-radius:     4px;
+  font-size:         14px;
+  border:            none;
+  cursor:            pointer;
+  transition:        background 0.3s ease;
+}
+
+.action-btn:hover {
+  background:        linear-gradient(90deg, #004D40 0%, #26A69A 100%);
+}
+
+
+/* ──────────────────────────────────────────────
+   Form Styles
+────────────────────────────────────────────── */
+
+.form-container {
+  background-color:    #FFFFFF;
+  padding:             24px;
+  border-radius:       8px;
+  max-width:           600px;
+  width:               100%;
+  box-shadow:          0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+h1 {
+  margin-top:          0;
+  font-size:           1.8rem;
+  text-align:          center;
+  background:          #FFFFFF;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.h1-bg {
+  background-color:    #0062C2;
+  color:               #FFFFFF;
+  padding:             12px 20px;
+  box-shadow:          0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+form fieldset {
+  border:              2px solid transparent;
+  border-radius:       4px;
+  padding:             16px;
+  margin-bottom:       20px;
+  border-image-source: linear-gradient(90deg, #26A69A 0%, #004D40 100%);
+  border-image-slice:  1;
+}
+
+form legend {
+  padding:             0 8px;
+  background-color:    #FFFFFF;
+  color:               #FFFFFF;
+  font-weight:         600;
+  font-size:           1.1rem;
+  border-radius:       4px;
+}
+
+label {
+  display:             block;
+  margin-bottom:       12px;
+}
+
+label input,
+label select,
+label textarea {
+  width:               98%;
+  padding:             8px;
+  background-color:    #FFFFFF;
+  border-radius:       4px;
+  color:               #004D40;
+  margin-top:          4px;
+  border:              1px solid #80CBC4; /* Default border */
+}
+
+label input:focus,
+label select:focus,
+label textarea:focus {
+  outline:             none;
+  box-shadow:          0 0 0 1px rgba(6, 63, 187, 0.5);
+}
+
+button[type="submit"] {
+  background-color:    #4FBA5B;
+  color:               #FFFFFF;
+  border:              none;
+  padding:             12px 20px;
+  width:               100%;
+  font-weight:         600;
+  border-radius:       4px;
+  cursor:              pointer;
+  font-size:           1rem;
+  transition:          background 0.3s ease;
+}
+
+button[type="submit"]:hover {
+  background:          linear-gradient(90deg, #004D40 0%, #26A69A 100%);
+}
+
+#form-message {
+  margin-top:          16px;
+  padding:             12px;
+  border-radius:       4px;
+  text-align:          center;
+  font-weight:         500;
+}
+
+#form-message.hidden {
+  display:             none;
+}
+
+#form-message.success {
+  background-color:    rgba(128, 203, 196, 0.2);
+  color:               #26A69A;
+}
+
+#form-message.error {
+  background-color:    rgba(244, 67, 54, 0.2);
+  color:               #D32F2F;
+}

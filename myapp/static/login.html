@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <!--<meta name="viewport" content="width=device-width, initial-scale=1.0">-->
+  <title>Login</title>
+  <link rel="stylesheet" href="/static/styles/styles.css">
+  <style>
+
+    body {
+      background: url("medical-cover.jpg") center / cover no-repeat fixed; 
+      /*  linear-gradient(rgba(10, 20, 40, 0.55), rgba(10, 20, 40, 0.55)), */
+      min-height: 100vh;
+      margin: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: Arial, sans-serif;
+    }
+
+    .form-container {
+      background: white;
+      padding: 2rem;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      width: 100%;
+      max-width: 400px;
+    }
+    h1 {
+      text-align: center;
+      color: #00796b;
+    }
+    label {
+      display: block;
+      margin: 1rem 0;
+      position: relative;
+    }
+    input[type="text"], input[type="password"] {
+      width: 100%;
+      padding: 0.75rem 0.75rem 0.75rem 2.5rem;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      transition: border-color 0.3s;
+    }
+    input[type="text"]:focus, input[type="password"]:focus {
+      border-color: #00796b;
+      outline: none;
+      box-shadow: 0 0 5px rgba(0, 121, 107, 0.5);
+    }
+    .icon {
+      position: absolute;
+      left: 0.75rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #00796b;
+    }
+    button {
+      width: 100%;
+      padding: 0.75rem;
+      background-color:  #4FBA5B;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    button:hover {
+      background-color: #006D85;
+    }
+    .checkbox-label {
+      display: flex;
+      align-items: center;
+      margin: 1rem 0;
+    }
+    .checkbox-label input {
+      margin-right: 0.5rem;
+    }
+    .forgot-password {
+      text-align: right;
+      margin-bottom: 1rem;
+    }
+    .forgot-password a {
+      color: #00796b;
+      text-decoration: none;
+    }
+    .forgot-password a:hover {
+      text-decoration: underline;
+    }
+    #login-message {
+      margin-top: 1rem;
+      padding: 0.5rem;
+      border-radius: 5px;
+    }
+    .error {
+      background-color: #ffebee;
+      color: #c62828;
+    }
+    .success {
+      background-color: #e8f5e9;
+      color: #2e7d32;
+    }
+    .hidden {
+      display: none;
+    }
+    .loader {
+      border: 3px solid #f3f3f3;
+      border-top: 3px solid #00796b;
+      border-radius: 50%;
+      width: 20px;
+      height: 20px;
+      animation: spin 1s linear infinite;
+      margin: 1rem auto;
+      display: none;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <div class="form-container">
+    <h1>Telesoft PACS</h1>
+    <form id="login-form">
+      <label>
+        <span class="icon">👤</span>
+        <input type="text" name="username" placeholder="Username" required aria-label="Username">
+      </label>
+      <label>
+        <span class="icon">🔒</span>
+        <input type="password" name="password" placeholder="Password" required aria-label="Password">
+      </label>
+      <div class="checkbox-label">
+        <input type="checkbox" name="remember_me"> Remember me
+      </div>
+      <div class="forgot-password">
+        <a href="/forgot-password">Forgot password?</a>
+      </div>
+      <button type="submit">Login</button>
+    </form>
+    <div id="login-message" class="hidden"></div>
+    <div class="loader" id="loader"></div>
+  </div>
+  <script>
+    const baseUrl = window.location.origin;
+
+    // Check if user is already logged in
+    window.onload = () => {
+      const token = localStorage.getItem('token');
+      const role = localStorage.getItem('role');
+      if (token && role) {
+       
+        if (role === 'Admin') {
+          window.location.href = '/admin/';
+        } else if (role === 'SubAdmin' || role === 'Center') {
+          window.location.href = '/static/index.html';
+        } else if (role === 'Center') {
+          window.location.href = '/static/institute.html';
+        } else if (role === 'Doctor') {
+          window.location.href = '/static/doctor.html';
+        }
+      }
+    };
+
+    document.getElementById('login-form').addEventListener('submit', async e => {
+      e.preventDefault();
+      const form = e.target;
+      const msgEl = document.getElementById('login-message');
+      const loader = document.getElementById('loader');
+      const formData = new FormData(form);
+      const data = Object.fromEntries(formData);
+
+      // Client-side validation
+      if (!data.username || !data.password) {
+        msgEl.textContent = '❌ Please fill in both fields.';
+        msgEl.className = 'error';
+        return;
+      }
+
+      // Show loader
+      loader.style.display = 'block';
+      msgEl.className = 'hidden';
+
+      try {
+        const res = await fetch(`${baseUrl}/api/login/`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        const result = await res.json();
+        if (!res.ok) throw new Error(result.error || 'Login failed');
+
+        localStorage.setItem('token', result.token);
+        localStorage.setItem('role', result.role);
+        if (result.center_name) localStorage.setItem('center_name', result.center_name);
+        if (result.institute_name) localStorage.setItem('institute_name', result.institute_name);
+
+        // Handle "Remember me"
+        if (form.remember_me.checked) {
+          localStorage.setItem('remembered_username', data.username);
+        } else {
+          localStorage.removeItem('remembered_username');
+        }
+
+        window.location.href = result.redirect;
+      } catch (err) {
+        msgEl.textContent = `❌ ${err.message}`;
+        msgEl.className = 'error';
+      } finally {
+        loader.style.display = 'none';
+      }
+    });
+
+    // Pre-fill username if remembered
+    const rememberedUsername = localStorage.getItem('remembered_username');
+    if (rememberedUsername) {
+      document.querySelector('input[name="username"]').value = rememberedUsername;
+      document.querySelector('input[name="remember_me"]').checked = true;
+    }
+  </script>
+</body>
+</html>

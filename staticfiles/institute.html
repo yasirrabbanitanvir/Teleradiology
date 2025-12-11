@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <!--<meta name="viewport" content="width=device-width, initial-scale=1.0" />-->
+  <title>Institute Portal</title>
+  <link rel="stylesheet" href="./styles/styles.css" />
+  <style>
+    .pagination-container {
+      margin-top: 20px;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      padding: 15px 20px;
+    }
+    
+    .pagination-wrapper {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 15px;
+    }
+    
+    .pagination-info {
+      color: #666;
+      font-size: 14px;
+    }
+    
+    .pagination-controls {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+    
+    .items-per-page {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      color: #666;
+    }
+    
+    .items-per-page select {
+      padding: 5px 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      background: white;
+      cursor: pointer;
+    }
+    
+    .pagination-buttons {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    
+    .pagination-btn {
+      padding: 8px 12px;
+      border: 1px solid #ddd;
+      background: white;
+      color: #333;
+      cursor: pointer;
+      border-radius: 4px;
+      font-size: 14px;
+      transition: all 0.2s ease;
+      min-width: 40px;
+    }
+    
+    .pagination-btn:hover:not(:disabled) {
+      background: #f5f5f5;
+      border-color: #ccc;
+    }
+    
+    .pagination-btn:disabled {
+      background: #f9f9f9;
+      color: #ccc;
+      cursor: not-allowed;
+      border-color: #eee;
+    }
+    
+    .pagination-btn.active {
+      background: #007bff;
+      color: white;
+      border-color: #007bff;
+    }
+    
+    .pagination-btn.active:hover {
+      background: #0056b3;
+      border-color: #0056b3;
+    }
+    
+    .page-numbers {
+      display: flex;
+      gap: 2px;
+    }
+    
+    .pagination-ellipsis {
+      padding: 8px 4px;
+      color: #999;
+      font-size: 14px;
+    }
+    
+    .img-thumbnails {
+      display: flex;
+      gap: 5px;
+      flex-wrap: wrap;
+    }
+    
+    .study-table-img {
+      width: 40px;
+      height: 40px;
+      border-radius: 4px;
+      object-fit: cover;
+      border: 1px solid #ddd;
+    }
+    
+    @media (max-width: 768px) {
+      .pagination-wrapper {
+        flex-direction: column;
+        align-items: stretch;
+        text-align: center;
+      }
+      
+      .pagination-controls {
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+      
+      .pagination-buttons {
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+    }
+
+  </style>
+</head>
+<body>
+  <header>
+    <nav>
+      <img src="logo.png" alt="PACS Logo" class="logo" />
+      <ul>
+        <li><a href="./form.html" target="_blank" style="background-color: rgb(175, 96, 31); border-radius: 25px; padding: 10px;">Patient Entry</a></li>
+        <li><a href="#">Password</a></li>
+        <li><a href="template.html">Templates</a></li>
+        <li><a href="#">Academics</a></li>
+        <li><a href="#" onclick="logout()">Log Off</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <div class="institute-header">
+    <div class="institute-info">
+      <h1 id="institute-display-name">Loading...</h1>
+      <p id="center-count-display">Loading centers...</p>
+    </div>
+  </div>
+  
+  <section class="search-panel">
+    <div class="center-filter-container">
+      <label for="center-filter"> </label>
+      <select id="center-filter">
+        <option value="All">All Centers</option>
+      </select>
+    </div>
+    <div class="search-inputs">
+      <input type="text" id="patient-name" placeholder="Patient Name" />
+      <input type="text" id="patient-id" placeholder="Patient ID" />
+      <input type="date" id="scan-start-date" />
+      <input type="date" id="scan-end-date" />
+      <select id="status">
+        <option value="All">All</option>
+        <option value="Not Assigned">Not Assigned</option>
+        <option value="Unreported">Unreported</option>
+        <option value="Draft">Draft</option>
+        <option value="Reviewed">Reviewed</option>
+        <option value="Reported">Reported</option>
+      </select>
+      <label>
+        <input type="checkbox" id="emergency" />
+        Show only Emergency Cases
+      </label>
+    </div>
+    <div class="modality-filter">
+      <label>
+        <input type="checkbox" id="modality-all" checked />
+        ALL
+      </label>
+      <div class="modality-row">
+        <label><input type="checkbox" class="modality-checkbox" value="CT" checked /> CT</label>
+        <label><input type="checkbox" class="modality-checkbox" value="US" checked /> US</label>
+        <label><input type="checkbox" class="modality-checkbox" value="XA" checked /> XA</label>
+        <label><input type="checkbox" class="modality-checkbox" value="SC" checked /> SC</label>
+        <label><input type="checkbox" class="modality-checkbox" value="AN" checked /> AN</label>
+        <label><input type="checkbox" class="modality-checkbox" value="RF" checked /> RF</label>
+        <label><input type="checkbox" class="modality-checkbox" value="OT" checked /> OT</label>
+      </div>
+      <div class="modality-row">
+        <label><input type="checkbox" class="modality-checkbox" value="MR" checked /> MR</label>
+        <label><input type="checkbox" class="modality-checkbox" value="CR" checked /> CR</label>
+        <label><input type="checkbox" class="modality-checkbox" value="NM" checked /> NM</label>
+        <label><input type="checkbox" class="modality-checkbox" value="PT" checked /> PT</label>
+        <label><input type="checkbox" class="modality-checkbox" value="DX" checked /> DX</label>
+        <label><input type="checkbox" class="modality-checkbox" value="PX" checked /> PX</label>
+      </div>
+    </div>
+    <button onclick="searchStudies()">Search</button>
+  </section>
+
+  <section class="study-list">
+    <table>
+      <thead>
+        <tr>
+          <th>DICOM Viewer</th>
+          <th>Report</th>
+          <th>History</th>
+          <th>Patient Name</th>
+          <th>Patient ID</th>
+          <th>Age</th>
+          <th>Sex</th>
+          <th>Body Part</th>
+          <th>Modality</th>
+          <th>Center Name</th>
+          <th>Scan Date/Time</th>
+          <th>Status</th>
+          <th>Assigned To</th>
+        </tr>
+      </thead>
+      <tbody id="study-table-body"></tbody>
+    </table>
+  </section>
+  
+  <script src="./script/institute.js"></script>
+</body>
+</html>

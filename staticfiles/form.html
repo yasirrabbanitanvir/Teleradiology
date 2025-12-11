@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <!--<meta name="viewport" content="width=device-width, initial-scale=1.0" />-->
+  <title>Patient Upload Form</title>
+  <link rel="stylesheet" href="./styles/form.css" />
+  <style>
+    body {
+      background: linear-gradient(rgba(10, 20, 40, 0.55), rgba(10, 20, 40, 0.55)), url("medical-cover2.jpg") center / cover no-repeat fixed;
+      min-height: 100vh;
+      margin: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: Arial, sans-serif;
+      position: relative;
+    }
+
+    .back-button {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      padding: 10px 20px;
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 14px;
+      backdrop-filter: blur(10px);
+      transition: all 0.3s;
+    }
+    
+    .file-list {
+      margin-top: 10px;
+      padding: 10px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 4px;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+    
+    .file-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px;
+      margin: 5px 0;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 3px;
+      font-size: 10px;
+      
+    }
+    
+    .file-item button {
+      padding: 4px 12px;
+      font-size: 12px;
+      background: #dc3545;
+      border: none;
+      color: white;
+      border-radius: 3px;
+      cursor: pointer;
+    }
+    
+    .file-item button:hover {
+      background: #c82333;
+    }
+    
+    .hidden {
+      display: none !important;
+    }
+    
+    #form-message {
+      margin-top: 15px;
+      padding: 12px;
+      border-radius: 4px;
+      text-align: center;
+      font-weight: bold;
+    }
+    
+    #form-message.error {
+      background-color: #fee;
+      color: #c33;
+      border: 1px solid #fcc;
+    }
+    
+    #form-message.success {
+      background-color: #efe;
+      color: #3c3;
+      border: 1px solid #cfc;
+    }
+    
+    #form-message.info {
+      background-color: #eef;
+      color: #33c;
+      border: 1px solid #ccf;
+    }
+  </style>
+</head>
+<body>
+  <button class="back-button" onclick="goBack()">Back</button>
+
+  <div class="form-container">
+    <p style="font-size: 16px; color: #ff6b6b; margin-top: 8px; line-height: 1.5;">
+      ✓ Supports: Uncompressed DICOM from - X-Ray | CT | MRI | Ultrasound | OPG<br>
+      ⚠ Coming Soon: Compressed formats from JPEG, PNG, TIFF etc.
+    </p>
+    <div class="h1-bg">
+      <h1>Patient Upload Form</h1>
+    </div>
+    <hr>
+    <form id="patient-upload-form" enctype="multipart/form-data">
+      <label>Select Existing Patient or Add New:
+        <select id="patient-id" name="patient_id">
+          <option value="">— Add New Patient —</option>
+        </select>
+      </label>
+      
+      <label>Center: <input type="text" name="center" required /></label>
+      
+      <label>Institute Name: <input type="text" name="institute_name" readonly /></label>
+      
+      <label>DICOM Files (Multiple): 
+        <input type="file" id="dicom-file-input" name="dicom_file" accept=".dcm" multiple />
+      </label>
+      
+      <div id="file-list" class="file-list hidden"></div>
+      
+      <label>Emergency: <input type="checkbox" name="emergency" /></label>
+      
+      <button type="submit">Submit</button>
+    </form>
+    <div id="form-message" class="hidden"></div>
+  </div>
+  <script src="./script/form.js"></script>
+</body>
+</html>

@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <!--<meta name="viewport" content="width=device-width, initial-scale=1.0" />-->
+  <title>Telesoft PACS System</title>
+  <link rel="stylesheet" href="./styles/styles.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
+</head>
+<body>
+  <header>
+    <nav>
+      <img src="logo.png" alt="PACS Logo" class="logo" />
+      <ul>
+        <li><a href="#">Password</a></li>
+        <li><a href="#">Templates</a></li>
+        <li><a href="#">Academics</a></li>
+        <li><a href="#" onclick="logout()">Log Off</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <div class="user-selection">
+    <div class="user-info-display">
+      <label>Logged in as:</label>
+      <strong id="user-display-name">Loading...</strong>
+    </div>
+  </div>
+
+  <section class="search-panel">
+    <div class="search-inputs">
+      <input type="text" id="patient-name" placeholder="Patient Name" />
+      <input type="text" id="patient-id" placeholder="Patient ID" />
+      <input type="date" id="scan-start-date" />
+      <input type="date" id="scan-end-date" />
+      <select id="status">
+        <option value="All">All</option>
+        <option value="Not Assigned">Not Assigned</option>
+        <option value="Unreported">Unreported</option>
+        <option value="Draft">Draft</option>
+        <option value="Reviewed">Reviewed</option>
+        <option value="Reported">Reported</option>
+      </select>
+      <select id="center">
+        <option value="ALL">All Centers</option>
+      </select>
+      <label>
+        <input type="checkbox" id="emergency" />
+        Show only Emergency Cases
+      </label>
+    </div>
+    <div class="modality-filter">
+      <label>
+        <input type="checkbox" id="modality-all" checked />
+        ALL
+      </label>
+      <div class="modality-row">
+        <label><input type="checkbox" class="modality-checkbox" value="CT" checked /> CT</label>
+        <label><input type="checkbox" class="modality-checkbox" value="US" checked /> US</label>
+        <label><input type="checkbox" class="modality-checkbox" value="XA" checked /> XA</label>
+        <label><input type="checkbox" class="modality-checkbox" value="SC" checked /> SC</label>
+        <label><input type="checkbox" class="modality-checkbox" value="AN" checked /> AN</label>
+        <label><input type="checkbox" class="modality-checkbox" value="RF" checked /> RF</label>
+        <label><input type="checkbox" class="modality-checkbox" value="OT" checked /> OT</label>
+      </div>
+      <div class="modality-row">
+        <label><input type="checkbox" class="modality-checkbox" value="MR" checked /> MR</label>
+        <label><input type="checkbox" class="modality-checkbox" value="CR" checked /> CR</label>
+        <label><input type="checkbox" class="modality-checkbox" value="NM" checked /> NM</label>
+        <label><input type="checkbox" class="modality-checkbox" value="PT" checked /> PT</label>
+        <label><input type="checkbox" class="modality-checkbox" value="DX" checked /> DX</label>
+        <label><input type="checkbox" class="modality-checkbox" value="PX" checked /> PX</label>
+      </div>
+    </div>
+    <button onclick="searchStudies()">Search</button>
+  </section>
+
+  <section class="assign-panel" id="assign-panel">
+    <select id="assign-doctors" multiple>
+      <option disabled>Loading doctors...</option>
+    </select>
+    <button id="assign-btn">Assign</button>
+  </section>
+
+  <section class="study-list">
+    <table>
+      <thead>
+        <tr>
+          <th><input type="checkbox" id="select-all" /></th>
+          <th>DICOM Viewer</th>
+          <th>Report</th>
+          <th>History</th>
+          <th>Patient Name</th>
+          <th>Patient ID</th>
+          <th>Age</th>
+          <th>Sex</th>
+          <th>Body Part</th>
+          <th>Modality</th>
+          <th>Center</th>
+          <th>Institute</th>
+          <th>Scan Date/Time</th>
+          <th>Status</th>
+          <th>Reported By</th>
+          <th>Group</th>
+        </tr>
+      </thead>
+      <tbody id="study-table-body"></tbody>
+    </table>
+  </section>
+
+  <script src="./script/script.js"></script>
+</body>
+</html>

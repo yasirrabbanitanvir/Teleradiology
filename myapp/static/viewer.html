@@ -1,0 +1,3303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>DICOM Viewer</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsbarcode/3.11.5/JsBarcode.all.min.js"></script>
+    
+    <style>
+    * {
+    box-sizing: border-box;
+    }
+
+    body {
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+    background: #f0f0f0;
+    color: #333;
+    overflow: hidden;
+    }
+
+    .back-button {
+    background: #0066cc;
+    color: white;
+    border: none;
+    padding: 6px 14px;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 13px;
+    }
+
+    .back-button:hover {
+    background: #0052a3;
+    }
+
+    .cornerstone-element {
+    width: 100%;
+    height: 100%;
+    background: #000;
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    }
+
+    .cornerstone-element canvas {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    }
+
+    .toolbar {
+    display: flex;
+    gap: 6px;
+    align-items: flex-start;
+    padding: 8px;
+    background: #e8e8e8;
+    border-left: 1px solid #ccc;
+    position: fixed;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    z-index: 100;
+    flex-direction: column;
+    width: 90px;
+    overflow-y: auto;
+    height: 100vh;
+    }
+
+    .tool-group {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 5px;
+    align-items: center;
+    padding: 0 0 8px 0;
+    border-bottom: 1px solid #ccc;
+    margin-bottom: 8px;
+    width: 100%;
+    }
+
+    .tool-group:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+    }
+
+    .toolButton {
+    border: 1px solid #999;
+    background: #fff;
+    padding: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    width: 38px;
+    height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #333;
+    }
+
+    .toolButton:hover {
+    background: #f5f5f5;
+    }
+
+    .toolButton.active {
+    background: #0066cc;
+    border-color: #0066cc;
+    color: white;
+    }
+
+    .dropdown {
+    position: relative;
+    width: 38px;
+    }
+
+    .dropdown-content {
+    display: none;
+    position: fixed;
+    background: #fff;
+    border: 1px solid #999;
+    padding: 10px;
+    min-width: 200px;
+    z-index: 10000;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+    }
+
+    .dropdown-content.show {
+    display: block;
+    }
+
+    .split-grid-container {
+    display: grid;
+    grid-template-columns: repeat(6, 28px);
+    grid-template-rows: repeat(4, 28px);
+    gap: 3px;
+    }
+
+    .split-grid-cell {
+    width: 28px;
+    height: 28px;
+    background: #f0f0f0;
+    cursor: pointer;
+    border: 1px solid #ccc;
+    }
+
+    .split-grid-cell:hover {
+    background: #e0e0e0;
+    }
+
+    .split-grid-cell.selected {
+    background: #0066cc;
+    border-color: #0066cc;
+    }
+
+    .image-container {
+    position: relative;
+    flex: 1;
+    background: #000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    overflow: hidden;
+    }
+
+    .viewport-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    color: #0f0;
+    font: 11px monospace;
+    pointer-events: none;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 8px;
+    }
+    
+    .overlay-top-left {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    line-height: 1.5;
+    }
+    
+    .overlay-top-right {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    text-align: right;
+    line-height: 1.5;
+    }
+    
+    .overlay-bottom-left {
+    position: absolute;
+    bottom: 8px;
+    left: 8px;
+    line-height: 1.5;
+    }
+    
+    .overlay-bottom-right {
+    position: absolute;
+    bottom: 8px;
+    right: 8px;
+    text-align: right;
+    line-height: 1.5;
+    }
+
+    .series-group {
+    margin-bottom: 12px;
+    }
+
+    .series-group-header {
+    background: #e0e0e0;
+    padding: 4px 8px;
+    font-weight: bold;
+    font-size: 10px;
+    color: #333;
+    border-bottom: 1px solid #ccc;
+    }
+
+    .series-thumbnails {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 6px;
+    padding: 6px;
+    }
+
+    .series-thumbnail {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 6px;
+    border: 2px solid #ccc;
+    cursor: grab;
+    position: relative;
+    background: #fff;
+    }
+
+    .series-thumbnail:active {
+    cursor: grabbing;
+    }
+
+    .series-thumbnail:hover {
+    border-color: #0066cc;
+    }
+
+    .series-thumbnail.active {
+    border-color: #0066cc;
+    background: #e6f2ff;
+    }
+
+    .series-thumbnail.dragging {
+    opacity: 0.6;
+    }
+
+    .image-count-badge {
+    position: absolute;
+    top: 3px;
+    right: 3px;
+    background: #0066cc;
+    color: white;
+    padding: 2px 5px;
+    font-size: 9px;
+    font-weight: bold;
+    }
+
+    .series-info {
+    font-size: 9px;
+    color: #666;
+    text-align: center;
+    line-height: 1.2;
+    }
+
+    .study-header {
+    background: #f5f5f5;
+    padding: 6px 8px;
+    border-bottom: 1px solid #ccc;
+    font-weight: bold;
+    font-size: 10px;
+    color: #333;
+    line-height: 1.3;
+    }
+
+    .series-container {
+    max-height: 40vh;
+    overflow-y: auto;
+    flex: 1;
+    }
+
+    .viewer-container {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    flex: 1;
+    height: 100vh;
+    margin-right: 90px;
+    overflow: hidden;
+    }
+
+    .main-content {
+    display: grid;
+    grid-template-columns: 145px 1fr;
+    gap: 12px;
+    padding: 12px;
+    height: 100vh;
+    overflow: hidden;
+    }
+
+    .sidebar {
+    background: #fff;
+    border: 1px solid #ccc;
+    overflow: hidden;
+    height: fit-content;
+    max-height: calc(100vh - 24px);
+    display: flex;
+    flex-direction: column;
+    }
+
+    .sidebar-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 8px;
+    border-bottom: 1px solid #ccc;
+    background: #f8f8f8;
+    gap: 4px;
+    }
+
+    .logo {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    }
+
+    .sidebar-header img {
+    width: 18px;
+    height: 18px;
+    }
+
+    .logo-text {
+    font-size: 11px;
+    font-weight: bold;
+    color: #333;
+    display: none;
+    }
+
+    .sidebar-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 4px 6px;
+    background: #f8f8f8;
+    border-top: 1px solid #ccc;
+    margin-top: auto;
+    font-size: 9px;
+    color: #666;
+    gap: 3px;
+    flex-wrap: wrap;
+    }
+
+    .sidebar-footer-item {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    }
+
+    .sidebar-footer-separator {
+    color: #ccc;
+    display: none;
+    }
+
+    .app-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    background: #f8f8f8;
+    border-top: 1px solid #ccc;
+    margin-top: auto;
+    font-size: 11px;
+    color: #666;
+    }
+
+    .playback-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-direction: column;
+    padding: 6px 0;
+    }
+
+    #frameSlider {
+    display: none;
+    }
+
+    #frameCounter {
+    font-size: 10px;
+    color: #666;
+    text-align: center;
+    }
+
+    .file-actions {
+    display: flex;
+    gap: 8px;
+    flex-direction: column;
+    width: 100%;
+    }
+
+    .file-actions .toolButton {
+    width: 100%;
+    font-size: 11px;
+    height: auto;
+    padding: 8px;
+    }
+
+    .thumbnail-wrapper {
+    width: 100%;
+    height: 80px;
+    background: #000;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    }
+
+    .thumbnail-wrapper canvas {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    }
+
+    .panel-drop-active {
+    border-color: #0066cc !important;
+    }
+
+    .mpr-modal {
+    position: fixed;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%,-50%);
+    width: 90vw;
+    height: 85vh;
+    background: #111;
+    border: 2px solid #222;
+    z-index: 100000;
+    display: flex;
+    gap: 8px;
+    padding: 8px;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.7);
+    }
+
+    .mpr-panel {
+    background: #000;
+    border: 1px solid #333;
+    flex: 1;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    }
+
+    .mpr-toolbar {
+    display: flex;
+    gap: 8px;
+    padding: 6px;
+    background: rgba(0,0,0,0.6);
+    align-items: center;
+    color: #fff;
+    }
+
+    .mpr-canvas {
+    flex: 1;
+    background: #000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    }
+
+    .mpr-controls {
+    display: flex;
+    gap: 6px;
+    padding: 6px;
+    align-items: center;
+    color: #fff;
+    }
+
+    .mpr-close {
+    position: absolute;
+    right: 8px;
+    top: 8px;
+    background: rgba(0,0,0,0.6);
+    border: 1px solid #444;
+    color: #fff;
+    padding: 4px 8px;
+    cursor: pointer;
+    z-index: 100001;
+    }
+
+    .mpr-slider {
+    width: 100%;
+    }
+</style>
+
+  </head>
+  <body>
+    <div class="main-content" id="mainContent">
+      <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+          <a class="logo">
+            <img alt="DICOM" src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTIxIDE2VjhNMyAxNlY4TTkgMTJWMTZNOSA4VjEyTTE1IDEyVjE2TTE1IDhWMTJNMTYgNEg4QzYuODk1NDMgNCA2IDQuODk1NDMgNiA2VjE4QzYgMTkuMTA0NiA2Ljg5NTQzIDIwIDggMjBIMTZDMTcuMTA0NiAyMCAxOCAxOS4xMDQ2IDE4IDE4VjZDMTggNC44OTU0MyAxNy4xMDQ2IDQgMTYgNFoiIHN0cm9rZT0iIzAwNjZjYyIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz4KPC9zdmc+" />
+            <span class="logo-text">DICOM</span>
+          </a>
+          <a href="#" class="back-button" id="backButton">
+            <i class="fas fa-arrow-left"></i> Back
+          </a>
+        </div>
+        
+        <div id="studyHeader" class="study-header" style="display: none;">
+          Study Information
+        </div>
+        
+        <div class="series-container" id="stackWrapper"></div>
+
+        <div class="sidebar-footer">
+          <div class="sidebar-footer-item">
+            <i class="fas fa-code-branch" style="color: #666;"></i>
+            <span>v1.0.0</span>
+          </div>
+          <div class="sidebar-footer-separator">•</div>
+          <div class="sidebar-footer-item">
+            <i class="fas fa-database" style="color: #666;"></i>
+            <span id="footerStatus">Ready</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="viewer-container">
+        <div class="toolbar">
+          <div class="tool-group">
+            <button class="toolButton" id="wwwcTool" title="Window Width/Window Center">
+              <i class="fas fa-adjust"></i>
+            </button>
+            <button class="toolButton" id="zoomTool" title="Zoom">
+              <i class="fas fa-search-plus"></i>
+            </button>
+            <button class="toolButton" id="panTool" title="Pan">
+              <i class="fas fa-hand-paper"></i>
+            </button>
+            <button class="toolButton" id="magnifyTool" title="Magnify">
+              <i class="fas fa-search"></i>
+            </button>
+            <button class="toolButton" id="invertTool" title="Invert">
+              <i class="fas fa-palette"></i>
+            </button>
+            <button class="toolButton" id="resetTool" title="Reset">
+              <i class="fas fa-undo"></i>
+            </button>
+          </div>
+
+          <div class="tool-group">
+            <button class="toolButton" id="lengthTool" title="Length">
+              <i class="fas fa-ruler"></i>
+            </button>
+            <button class="toolButton" id="angleTool" title="Angle">
+              <i class="fas fa-ruler-combined"></i>
+            </button>
+            <button class="toolButton" id="probeTool" title="Probe">
+              <i class="fas fa-crosshairs"></i>
+            </button>
+            <button class="toolButton" id="ellipticalRoiTool" title="Elliptical ROI">
+              <i class="far fa-circle"></i>
+            </button>
+            <button class="toolButton" id="rectangleRoiTool" title="Rectangle ROI">
+              <i class="far fa-square"></i>
+            </button>
+            <button class="toolButton" id="freehandRoiTool" title="Freehand">
+              <i class="fas fa-paint-brush"></i>
+            </button>
+            <button class="toolButton" id="arrowAnnotateTool" title="Arrow">
+              <i class="fas fa-long-arrow-alt-right"></i>
+            </button>
+            <button class="toolButton" id="bidirectionalTool" title="Bidirectional">
+              <i class="fas fa-arrows-alt-h"></i>
+            </button>
+            <button class="toolButton" id="eraserTool" title="Eraser">
+              <i class="fas fa-eraser"></i>
+            </button>
+          </div>
+
+          <div class="tool-group">
+            <div class="dropdown">
+              <button class="toolButton" id="splitWindowBtn" title="Split Screen">
+                <i class="fas fa-th"></i>
+              </button>
+              <div class="dropdown-content" id="splitWindowDropdown"></div>
+            </div>
+            <button class="toolButton" id="split1x2Btn" title="1x2 Layout">
+              <span style="font-weight: bold; font-size: 14px;">1×2</span>
+            </button>
+          </div>
+
+          <div class="tool-group">
+            <button class="toolButton" id="playClip" title="Play/Pause">
+              <i class="fas fa-play"></i>
+            </button>
+            <div class="playback-controls" style="display: none;">
+              <input type="range" id="frameSlider" min="0" max="0" value="0" step="1" />
+              <span id="frameCounter">Image: 0/0</span>
+            </div>
+          </div>
+
+          <div class="file-actions">
+            <button class="toolButton" id="reportBtn" title="Report">
+              <span style="font-weight: bold; font-size: 16px;">R</span>
+            </button>
+            <button class="toolButton" id="captureBtn" title="Screenshot">
+              <i class="fas fa-camera"></i>
+            </button>
+            <button class="toolButton" id="mprTool" title="MPR">
+              <i class="fas fa-bullseye"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="image-container">
+          <div id="dicomImage" class="cornerstone-element"></div>
+          <div class="viewport-overlay">
+            <div class="overlay-top-left" id="topLeft"></div>
+            <div class="overlay-top-right" id="topRight"></div>
+            <div class="overlay-bottom-left" id="bottomLeft"></div>
+            <div class="overlay-bottom-right" id="bottomRight"></div>
+          </div>
+        </div>
+
+        <footer class="app-footer">
+        </footer>
+      </div>
+    </div>
+
+    <script src="/static/js/diacom/jquery-3.6.0.min.js"></script>
+    <script src="/static/js/diacom/hammer.js"></script>
+    <script src="/static/js/diacom/dicomParser.min.js"></script>
+    <script src="/static/js/diacom/cornerstone.js"></script>
+    <script src="/static/js/diacom/cornerstoneMath.min.js"></script>
+    <script src="/static/js/diacom/cornerstoneWADOImageLoader.bundle.min.js"></script>
+    <script src="/static/js/diacom/cornerstoneTools.min.js"></script>
+
+    <script>
+        let loaded = false;
+        let studyImages = [];
+        let seriesGroups = {};
+        let currentImageIndex = 0;
+        let totalImages = 0;
+        let isPlaying = false;
+        let playbackInterval = null;
+        let playbackSpeed = 100;
+        let element = null;
+        let activeTool = null;
+        let enabledElements = [];
+        let focusedElement = null;
+        let splitGridSelection = new Set();
+        let isDragging = false;
+        let dragStartCell = null;
+        let isSplitView = false;
+        let currentDicomData = null;
+        let panelImagePositions = new Map();
+        const imageCache = new Map();
+
+        const params = new URLSearchParams(window.location.search);
+        const studyUID = params.get("study") || "";
+        const csrftoken = getCookie("csrftoken");
+
+        function getCookie(name) {
+            const value = `; ${document.cookie}`.split(`; ${name}=`);
+            if (value.length === 2) return value.pop().split(";").shift();
+        }
+
+        if (!document.getElementById('markerPulseAnimation')) {
+            const style = document.createElement('style');
+            style.id = 'markerPulseAnimation';
+            style.textContent = `
+                @keyframes pulse {
+                    0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+                    50% { transform: translate(-50%, -50%) scale(1.3); opacity: 0.8; }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+
+        function setupBackButton() {
+            const backButton = document.getElementById("backButton");
+            const referrer = document.referrer;
+            backButton.href = referrer.includes("doctor.html") ? "/static/doctor.html" : "/static/index.html";
+        }
+
+        cornerstoneWADOImageLoader.configure({
+            beforeSend: function (xhr) {
+                try {
+                    const u = new URL(xhr.responseURL || "", window.location.href);
+                    if (u.origin === window.location.origin && csrftoken) {
+                        xhr.setRequestHeader("X-CSRFToken", csrftoken);
+                    }
+                } catch (_) {}
+            },
+            useWebWorkers: false,
+            taskConfiguration: {
+                decodeTask: {
+                    initializeCodecsOnStartup: false,
+                    usePDFJS: false,
+                    strict: false
+                }
+            }
+        });
+
+        cornerstoneWADOImageLoader.external.cornerstone = cornerstone;
+        cornerstoneWADOImageLoader.external.dicomParser = dicomParser;
+
+        document.addEventListener("DOMContentLoaded", function () {
+            setupBackButton();
+            initializeCornerstone();
+            setupEventListeners();
+            initializeTools();
+            initializeSplitWindow();
+            customizeEllipticalRoiTool();
+
+            if (studyUID) {
+                loadStudyImages(studyUID);
+            } else {
+                updateStatus("No study UID provided");
+            }
+            
+            const imageContainer = document.querySelector(".image-container");
+            if (imageContainer) {
+                imageContainer.addEventListener('wheel', handleMouseWheel, { passive: false });
+            }
+        });
+
+        function customizeEllipticalRoiTool() {
+            let eventListenersAdded = false;
+            
+            function drawHandlesCustom(context, eventData, handles, options) {
+                const color = options.color || '#00ff00';
+                const handleRadius = 3;
+                
+                Object.keys(handles).forEach(handleKey => {
+                    const handle = handles[handleKey];
+                    if (handle && handle.x !== undefined && handle.y !== undefined) {
+                        const handleCanvas = cornerstone.pixelToCanvas(eventData.element, handle);
+                        
+                        context.beginPath();
+                        context.strokeStyle = color;
+                        context.fillStyle = color;
+                        context.lineWidth = 1;
+                        context.arc(handleCanvas.x, handleCanvas.y, handleRadius, 0, 2 * Math.PI);
+                        context.fill();
+                        context.stroke();
+                    }
+                });
+            }
+            
+            cornerstoneTools.EllipticalRoiTool.prototype.renderToolData = function(evt) {
+                const eventData = evt.detail;
+                const element = evt.currentTarget;
+                const toolData = cornerstoneTools.getToolState(element, this.name);
+                if (!toolData) return;
+
+                const context = eventData.canvasContext.canvas.getContext('2d');
+                const enabledElement = cornerstone.getEnabledElement(element);
+                const image = enabledElement.image;
+                
+                context.setTransform(1, 0, 0, 1, 0, 0);
+
+                for (let i = 0; i < toolData.data.length; i++) {
+                    const data = toolData.data[i];
+                    if (!data.handles || !data.handles.start || !data.handles.end) continue;
+
+                    const color = cornerstoneTools.toolColors.getColorIfActive(data);
+                    
+                    const handleStartCanvas = cornerstone.pixelToCanvas(element, data.handles.start);
+                    const handleEndCanvas = cornerstone.pixelToCanvas(element, data.handles.end);
+                    
+                    const widthCanvas = Math.abs(handleEndCanvas.x - handleStartCanvas.x);
+                    const heightCanvas = Math.abs(handleEndCanvas.y - handleStartCanvas.y);
+                    const centerX = (handleStartCanvas.x + handleEndCanvas.x) / 2;
+                    const centerY = (handleStartCanvas.y + handleEndCanvas.y) / 2;
+
+                    if (widthCanvas < 2 || heightCanvas < 2) continue;
+
+                    context.save();
+                    context.beginPath();
+                    context.strokeStyle = color;
+                    context.lineWidth = 2;
+                    context.ellipse(centerX, centerY, widthCanvas / 2, heightCanvas / 2, 0, 0, 2 * Math.PI);
+                    context.stroke();
+                    context.restore();
+
+                    if ((!data.meanStdDev || !data.area) && data.handles.start && data.handles.end) {
+                        calculateEllipseStats(element, data);
+                    }
+
+                    if (data.meanStdDev && data.area) {
+                        const areaInMm2 = data.area;
+                        const areaInCm2 = areaInMm2 / 100;
+                        
+                        const text = [
+                            `Min: ${data.meanStdDev.min.toFixed(2)} HU`,
+                            `Max: ${data.meanStdDev.max.toFixed(2)} HU`,
+                            `Average: ${data.meanStdDev.mean.toFixed(2)} HU`,
+                            `Area: ${areaInCm2.toFixed(2)} sq cm`
+                        ];
+                        
+                        const padding = 8;
+                        const lineHeight = 18;
+                        const fontSize = 13;
+                        context.font = `${fontSize}px Arial`;
+                        
+                        const maxWidth = Math.max(...text.map(t => context.measureText(t).width));
+                        const boxWidth = maxWidth + padding * 2;
+                        const boxHeight = text.length * lineHeight + padding * 2;
+                        
+                        let textX = centerX + widthCanvas / 2 + 15;
+                        let textY = centerY - boxHeight / 2;
+                        
+                        if (textX + boxWidth > eventData.canvasContext.canvas.width) {
+                            textX = centerX - widthCanvas / 2 - boxWidth - 15;
+                        }
+                        if (textY < 0) textY = 10;
+                        if (textY + boxHeight > eventData.canvasContext.canvas.height) {
+                            textY = eventData.canvasContext.canvas.height - boxHeight - 10;
+                        }
+
+                        context.save();
+                        context.fillStyle = 'rgba(0, 0, 0, 0.75)';
+                        context.fillRect(textX, textY, boxWidth, boxHeight);
+                        
+                        context.fillStyle = '#ffffff';
+                        context.font = `${fontSize}px Arial`;
+                        context.textAlign = 'left';
+                        context.textBaseline = 'top';
+                        
+                        text.forEach((line, idx) => {
+                            context.fillText(line, textX + padding, textY + padding + idx * lineHeight);
+                        });
+                        context.restore();
+                    }
+
+                    const handleOptions = { color };
+                    drawHandlesCustom(context, eventData, data.handles, handleOptions);
+                }
+            };
+            
+            if (!eventListenersAdded) {
+                eventListenersAdded = true;
+                const elements = enabledElements.length > 0 ? enabledElements : [element];
+                elements.forEach(el => {
+                    el.addEventListener('cornerstonetoolsmeasurementcompleted', function(e) {
+                        const eventData = e.detail;
+                        if (eventData.toolType === 'EllipticalRoi') {
+                            cornerstone.updateImage(el);
+                        }
+                    });
+
+                    el.addEventListener('cornerstonetoolsmeasurementmodified', function(e) {
+                        const eventData = e.detail;
+                        if (eventData.toolType === 'EllipticalRoi') {
+                            const toolData = cornerstoneTools.getToolState(el, 'EllipticalRoi');
+                            if (toolData && toolData.data) {
+                                toolData.data.forEach(data => {
+                                    if (data.handles && data.handles.start && data.handles.end) {
+                                        data.meanStdDev = null;
+                                        data.area = null;
+                                    }
+                                });
+                            }
+                            cornerstone.updateImage(el);
+                        }
+                    });
+                });
+            }
+        }
+
+        function calculateEllipseStats(element, data) {
+            try {
+                const enabledElement = cornerstone.getEnabledElement(element);
+                const image = enabledElement.image;
+                
+                const startPixel = data.handles.start;
+                const endPixel = data.handles.end;
+                
+                const width = Math.abs(endPixel.x - startPixel.x);
+                const height = Math.abs(endPixel.y - startPixel.y);
+                const centerX = (startPixel.x + endPixel.x) / 2;
+                const centerY = (startPixel.y + endPixel.y) / 2;
+                
+                const radiusX = width / 2;
+                const radiusY = height / 2;
+                
+                if (radiusX < 1 || radiusY < 1) return;
+                
+                let sum = 0;
+                let count = 0;
+                let min = Infinity;
+                let max = -Infinity;
+                let sumSquared = 0;
+                
+                const minX = Math.floor(centerX - radiusX);
+                const maxX = Math.ceil(centerX + radiusX);
+                const minY = Math.floor(centerY - radiusY);
+                const maxY = Math.ceil(centerY + radiusY);
+                
+                for (let y = minY; y <= maxY; y++) {
+                    for (let x = minX; x <= maxX; x++) {
+                        if (x >= 0 && x < image.width && y >= 0 && y < image.height) {
+                            const dx = (x - centerX) / radiusX;
+                            const dy = (y - centerY) / radiusY;
+                            
+                            if ((dx * dx + dy * dy) <= 1) {
+                                const pixelIndex = y * image.width + x;
+                                const pixelValue = image.getPixelData()[pixelIndex];
+                                
+                                sum += pixelValue;
+                                sumSquared += pixelValue * pixelValue;
+                                count++;
+                                
+                                if (pixelValue < min) min = pixelValue;
+                                if (pixelValue > max) max = pixelValue;
+                            }
+                        }
+                    }
+                }
+                
+                if (count > 0) {
+                    const mean = sum / count;
+                    const variance = (sumSquared / count) - (mean * mean);
+                    const stdDev = Math.sqrt(variance);
+                    
+                    data.meanStdDev = {
+                        mean: mean,
+                        stdDev: stdDev,
+                        min: min,
+                        max: max,
+                        count: count
+                    };
+                    
+                    const rowPixelSpacing = image.rowPixelSpacing || 1;
+                    const colPixelSpacing = image.columnPixelSpacing || 1;
+                    const areaMm2 = Math.PI * (radiusX * colPixelSpacing) * (radiusY * rowPixelSpacing);
+                    data.area = areaMm2;
+                }
+            } catch (error) {
+            }
+        }
+
+        function getImagePosition(imageData) {
+            if (!imageData) return null;
+            try {
+                const posStr = imageData.string('x00200032');
+                if (posStr) {
+                    const parts = posStr.split('\\');
+                    if (parts.length >= 3) {
+                        return {
+                            x: parseFloat(parts[0]),
+                            y: parseFloat(parts[1]),
+                            z: parseFloat(parts[2])
+                        };
+                    }
+                }
+            } catch (e) {
+            }
+            return null;
+        }
+
+        function getImageOrientation(imageData) {
+            if (!imageData) return null;
+            try {
+                const orientStr = imageData.string('x00200037');
+                if (orientStr) {
+                    const parts = orientStr.split('\\');
+                    if (parts.length >= 6) {
+                        return {
+                            rowCosines: [parseFloat(parts[0]), parseFloat(parts[1]), parseFloat(parts[2])],
+                            colCosines: [parseFloat(parts[3]), parseFloat(parts[4]), parseFloat(parts[5])]
+                        };
+                    }
+                }
+            } catch (e) {
+            }
+            return null;
+        }
+
+        function getPixelSpacing(imageData) {
+            if (!imageData) return { row: 1, col: 1 };
+            try {
+                const spacingStr = imageData.string('x00280030');
+                if (spacingStr) {
+                    const parts = spacingStr.split('\\');
+                    if (parts.length >= 2) {
+                        return {
+                            row: parseFloat(parts[0]),
+                            col: parseFloat(parts[1])
+                        };
+                    }
+                }
+            } catch (e) {
+            }
+            return { row: 1, col: 1 };
+        }
+
+        function crossProduct(a, b) {
+            return [
+                a[1] * b[2] - a[2] * b[1],
+                a[2] * b[0] - a[0] * b[2],
+                a[0] * b[1] - a[1] * b[0]
+            ];
+        }
+
+        function dotProduct(a, b) {
+            return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+        }
+
+function getCrossProduct(a, b) {
+    return [
+        a[1] * b[2] - a[2] * b[1],
+        a[2] * b[0] - a[0] * b[2],
+        a[0] * b[1] - a[1] * b[0]
+    ];
+}
+
+function getDotProduct(a, b) {
+    return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+}
+
+function normalizeVector(v) {
+    const mag = Math.sqrt(v[0]**2 + v[1]**2 + v[2]**2);
+    if (mag < 0.001) return null;
+    return [v[0]/mag, v[1]/mag, v[2]/mag];
+}
+
+function getImageOrientation(imageData) {
+    try {
+        const orientStr = imageData.string('x00200037');
+        if (orientStr) {
+            const parts = orientStr.split('\\');
+            if (parts.length >= 6) {
+                return {
+                    rowCosines: [parseFloat(parts[0]), parseFloat(parts[1]), parseFloat(parts[2])],
+                    colCosines: [parseFloat(parts[3]), parseFloat(parts[4]), parseFloat(parts[5])]
+                };
+            }
+        }
+    } catch (e) {
+    }
+    return null;
+}
+
+function getImagePosition(imageData) {
+    try {
+        const posStr = imageData.string('x00200032');
+        if (posStr) {
+            const parts = posStr.split('\\');
+            if (parts.length >= 3) {
+                return {
+                    x: parseFloat(parts[0]),
+                    y: parseFloat(parts[1]),
+                    z: parseFloat(parts[2])
+                };
+            }
+        }
+    } catch (e) {
+    }
+    return null;
+}
+
+function getPixelSpacing(imageData) {
+    try {
+        const spacingStr = imageData.string('x00280030');
+        if (spacingStr) {
+            const parts = spacingStr.split('\\');
+            if (parts.length >= 2) {
+                return {
+                    row: parseFloat(parts[0]),
+                    col: parseFloat(parts[1])
+                };
+            }
+        }
+    } catch (e) {}
+    return { row: 1, col: 1 };
+}
+
+function calculateCrossReferencePoint(sourcePanel, targetPanel) {
+    try {
+        const sourceElement = cornerstone.getEnabledElement(sourcePanel);
+        const targetElement = cornerstone.getEnabledElement(targetPanel);
+        
+        if (!sourceElement?.image?.data || !targetElement?.image?.data) {
+            return null;
+        }
+
+        const sourceData = sourceElement.image.data;
+        const targetData = targetElement.image.data;
+        const targetImage = targetElement.image;
+
+        const sourcePos = getImagePosition(sourceData);
+        const targetPos = getImagePosition(targetData);
+        const sourceOrient = getImageOrientation(sourceData);
+        const targetOrient = getImageOrientation(targetData);
+        const targetSpacing = getPixelSpacing(targetData);
+
+        if (!sourcePos || !targetPos || !sourceOrient || !targetOrient) {
+            return null;
+        }
+
+        const sourceNormal = getCrossProduct(sourceOrient.rowCosines, sourceOrient.colCosines);
+        const targetNormal = getCrossProduct(targetOrient.rowCosines, targetOrient.colCosines);
+
+        const dotNormals = getDotProduct(sourceNormal, targetNormal);
+        if (Math.abs(dotNormals) > 0.98) {
+            return null;
+        }
+
+        const lineDir = getCrossProduct(sourceNormal, targetNormal);
+        const normalLineDir = normalizeVector(lineDir);
+        
+        if (!normalLineDir) return null;
+
+        const d1 = getDotProduct(sourceNormal, sourcePos);
+        const d2 = getDotProduct(targetNormal, targetPos);
+        const denom = 1 - dotNormals * dotNormals;
+        const c1 = (d1 - d2 * dotNormals) / denom;
+        const c2 = (d2 - d1 * dotNormals) / denom;
+
+        const linePoint = [
+            c1 * sourceNormal[0] + c2 * targetNormal[0],
+            c1 * sourceNormal[1] + c2 * targetNormal[1],
+            c1 * sourceNormal[2] + c2 * targetNormal[2]
+        ];
+
+        const vecToLine = [
+            linePoint[0] - targetPos.x,
+            linePoint[1] - targetPos.y,
+            linePoint[2] - targetPos.z
+        ];
+
+        const u = getDotProduct(vecToLine, targetOrient.rowCosines) / targetSpacing.col;
+        const v = getDotProduct(vecToLine, targetOrient.colCosines) / targetSpacing.row;
+
+        const pixelX = targetImage.width / 2 + u;
+        const pixelY = targetImage.height / 2 + v;
+
+        const canvasPoint = cornerstone.pixelToCanvas(targetPanel, { x: pixelX, y: pixelY });
+
+        const dirU = getDotProduct(normalLineDir, targetOrient.rowCosines);
+        const dirV = getDotProduct(normalLineDir, targetOrient.colCosines);
+        const angleDeg = Math.atan2(dirV, dirU) * (180 / Math.PI);
+
+        return {
+            x: canvasPoint.x,
+            y: canvasPoint.y,
+            angle: angleDeg,
+            valid: true
+        };
+
+    } catch (error) {
+        return null;
+    }
+}
+
+function removeCrossReferenceLines(panel) {
+    const container = panel.parentElement;
+    if (container) {
+        const lines = container.querySelectorAll('.crossref-line');
+        lines.forEach(line => line.remove());
+    }
+}
+
+function drawCrossReferenceLines() {
+    if (!isSplitView || !focusedElement) return;
+
+    enabledElements.forEach((targetPanel, index) => {
+        if (targetPanel === focusedElement) return;
+
+        removeCrossReferenceLines(targetPanel);
+
+        const result = calculateCrossReferencePoint(focusedElement, targetPanel);
+        
+        if (result && result.valid) {
+            drawIntersectionLine(targetPanel, result.x, result.y, result.angle);
+        } else {
+            drawCenterCrosshair(targetPanel);
+        }
+    });
+}
+
+        function initializeSplitWindow() {
+            const dropdown = document.getElementById("splitWindowDropdown");
+            const gridContainer = document.createElement("div");
+            gridContainer.className = "split-grid-container";
+
+            for (let i = 0; i < 24; i++) {
+                const cell = document.createElement("div");
+                cell.className = "split-grid-cell";
+                cell.dataset.index = i;
+                
+                cell.addEventListener("mousedown", (e) => {
+                    e.preventDefault();
+                    isDragging = true;
+                    dragStartCell = i;
+                    splitGridSelection.clear();
+                    splitGridSelection.add(i);
+                    updateGridHighlight();
+                });
+                
+                cell.addEventListener("mouseenter", (e) => {
+                    if (isDragging && dragStartCell !== null) {
+                        e.preventDefault();
+                        selectRectangularArea(dragStartCell, i);
+                    }
+                });
+                
+                cell.addEventListener("mouseup", (e) => {
+                    if (isDragging) {
+                        e.preventDefault();
+                        isDragging = false;
+                        if (splitGridSelection.size > 0) {
+                            setTimeout(() => applySplitLayout(), 100);
+                        }
+                    }
+                });
+                
+                gridContainer.appendChild(cell);
+            }
+            
+            document.addEventListener("mouseup", () => {
+                if (isDragging) {
+                    isDragging = false;
+                    if (splitGridSelection.size > 0) {
+                        setTimeout(() => applySplitLayout(), 100);
+                    }
+                }
+            });
+
+            dropdown.appendChild(gridContainer);
+
+            document.getElementById("splitWindowBtn").addEventListener("click", (e) => {
+                e.stopPropagation();
+                const isVisible = dropdown.classList.contains("show");
+                document.querySelectorAll(".dropdown-content").forEach(dd => dd.classList.remove("show"));
+                if (!isVisible) {
+                    const btn = document.getElementById("splitWindowBtn");
+                    const rect = btn.getBoundingClientRect();
+                    dropdown.style.left = (rect.left - 210) + "px";
+                    dropdown.style.top = rect.top + "px";
+                    dropdown.classList.add("show");
+                }
+            });
+        }
+
+        function selectRectangularArea(startIndex, endIndex) {
+            splitGridSelection.clear();
+            const startRow = Math.floor(startIndex / 6);
+            const startCol = startIndex % 6;
+            const endRow = Math.floor(endIndex / 6);
+            const endCol = endIndex % 6;
+            const minRow = Math.min(startRow, endRow);
+            const maxRow = Math.max(startRow, endRow);
+            const minCol = Math.min(startCol, endCol);
+            const maxCol = Math.max(startCol, endCol);
+            for (let row = minRow; row <= maxRow; row++) {
+                for (let col = minCol; col <= maxCol; col++) {
+                    splitGridSelection.add(row * 6 + col);
+                }
+            }
+            updateGridHighlight();
+        }
+
+        function updateGridHighlight() {
+            document.querySelectorAll(".split-grid-cell").forEach(cell => {
+                const index = parseInt(cell.dataset.index);
+                cell.classList.toggle("selected", splitGridSelection.has(index));
+            });
+        }
+
+
+
+        function getMetadata(imageData) {
+            if (!imageData) return null;
+            
+            try {
+                const metadata = {
+                    position: null,
+                    orientation: null,
+                    spacing: { row: 1, col: 1 }
+                };
+
+                try {
+                    const posStr = imageData.string('x00200032');
+                    if (posStr) {
+                        const parts = posStr.split('\\');
+                        metadata.position = {
+                            x: parseFloat(parts[0]) || 0,
+                            y: parseFloat(parts[1]) || 0,
+                            z: parseFloat(parts[2]) || 0
+                        };
+                    }
+                } catch (e) {}
+
+                try {
+                    const orientStr = imageData.string('x00200037');
+                    if (orientStr) {
+                        const parts = orientStr.split('\\');
+                        if (parts.length >= 6) {
+                            metadata.orientation = {
+                                rowX: parseFloat(parts[0]) || 0,
+                                rowY: parseFloat(parts[1]) || 0,
+                                rowZ: parseFloat(parts[2]) || 0,
+                                colX: parseFloat(parts[3]) || 0,
+                                colY: parseFloat(parts[4]) || 0,
+                                colZ: parseFloat(parts[5]) || 0
+                            };
+                        }
+                    }
+                } catch (e) {}
+
+                try {
+                    const spacingStr = imageData.string('x00280030');
+                    if (spacingStr) {
+                        const parts = spacingStr.split('\\');
+                        metadata.spacing = {
+                            row: parseFloat(parts[0]) || 1,
+                            col: parseFloat(parts[1]) || 1
+                        };
+                    }
+                } catch (e) {}
+
+                return metadata;
+            } catch (error) {
+                return null;
+            }
+        }
+
+        function cross(a, b) {
+            return [
+                a[1]*b[2] - a[2]*b[1],
+                a[2]*b[0] - a[0]*b[2],
+                a[0]*b[1] - a[1]*b[0]
+            ];
+        }
+
+        function dot(a, b) {
+            return a[0]*b[0] + a[1]*b[1] + a[2]*b[2];
+        }
+
+        function magnitude(v) {
+            return Math.sqrt(v[0]*v[0] + v[1]*v[1] + v[2]*v[2]);
+        }
+
+        function normalize(v) {
+            const mag = magnitude(v);
+            if (mag < 0.0001) return null;
+            return [v[0]/mag, v[1]/mag, v[2]/mag];
+        }
+
+        function findIntersectionPoint(sourceMeta, targetMeta) {
+            if (!sourceMeta?.position || !sourceMeta?.orientation || 
+                !targetMeta?.position || !targetMeta?.orientation) {
+                return null;
+            }
+
+            const sourceNormal = cross(
+                [sourceMeta.orientation.rowX, sourceMeta.orientation.rowY, sourceMeta.orientation.rowZ],
+                [sourceMeta.orientation.colX, sourceMeta.orientation.colY, sourceMeta.orientation.colZ]
+            );
+            
+            const targetNormal = cross(
+                [targetMeta.orientation.rowX, targetMeta.orientation.rowY, targetMeta.orientation.rowZ],
+                [targetMeta.orientation.colX, targetMeta.orientation.colY, targetMeta.orientation.colZ]
+            );
+
+            const srcN = normalize(sourceNormal);
+            const tgtN = normalize(targetNormal);
+            
+            if (!srcN || !tgtN) return null;
+
+            const dotN = dot(srcN, tgtN);
+            if (Math.abs(dotN) > 0.99) return null;
+
+            const lineDir = normalize(cross(srcN, tgtN));
+            if (!lineDir) return null;
+
+            const sp = sourceMeta.position;
+            const tp = targetMeta.position;
+            
+            const d1 = dot(srcN, [sp.x, sp.y, sp.z]);
+            const d2 = dot(tgtN, [tp.x, tp.y, tp.z]);
+            
+            const denom = 1 - dotN * dotN;
+            if (Math.abs(denom) < 0.0001) return null;
+            
+            const c1 = (d1 - d2 * dotN) / denom;
+            const c2 = (d2 - d1 * dotN) / denom;
+
+            const point = [
+                c1 * srcN[0] + c2 * tgtN[0],
+                c1 * srcN[1] + c2 * tgtN[1],
+                c1 * srcN[2] + c2 * tgtN[2]
+            ];
+
+            const vec = [point[0] - tp.x, point[1] - tp.y, point[2] - tp.z];
+            
+            const row = dot(vec, [targetMeta.orientation.rowX, targetMeta.orientation.rowY, targetMeta.orientation.rowZ]) / targetMeta.spacing.col;
+            const col = dot(vec, [targetMeta.orientation.colX, targetMeta.orientation.colY, targetMeta.orientation.colZ]) / targetMeta.spacing.row;
+
+            const dirRow = dot(lineDir, [targetMeta.orientation.rowX, targetMeta.orientation.rowY, targetMeta.orientation.rowZ]);
+            const dirCol = dot(lineDir, [targetMeta.orientation.colX, targetMeta.orientation.colY, targetMeta.orientation.colZ]);
+            
+            const angle = Math.atan2(dirCol, dirRow) * 180 / Math.PI;
+
+            return {
+                pixelX: row,
+                pixelY: col,
+                angle: angle
+            };
+        }
+
+        function removeCrossReferenceLines(panel) {
+            const container = panel.parentElement;
+            if (container) {
+                const lines = container.querySelectorAll('.crossref-line');
+                lines.forEach(l => l.remove());
+            }
+        }
+
+        function drawCrossReferenceLines() {
+            if (!isSplitView || !focusedElement || !enabledElements) return;
+
+            enabledElements.forEach((targetPanel) => {
+                if (targetPanel === focusedElement) return;
+
+                removeCrossReferenceLines(targetPanel);
+
+                try {
+                    const srcElement = cornerstone.getEnabledElement(focusedElement);
+                    const tgtElement = cornerstone.getEnabledElement(targetPanel);
+
+                    if (!srcElement?.image?.data || !tgtElement?.image?.data || !tgtElement?.image) {
+                        drawCenterCrosshair(targetPanel);
+                        return;
+                    }
+
+                    const srcMeta = getMetadata(srcElement.image.data);
+                    const tgtMeta = getMetadata(tgtElement.image.data);
+
+                    const result = findIntersectionPoint(srcMeta, tgtMeta);
+
+                    if (result) {
+                        const canvasPoint = cornerstone.pixelToCanvas(targetPanel, {
+                            x: result.pixelX,
+                            y: result.pixelY
+                        });
+
+                        drawIntersectionLine(targetPanel, canvasPoint.x, canvasPoint.y, result.angle);
+                    } else {
+                        drawCenterCrosshair(targetPanel);
+                    }
+
+                } catch (error) {
+                    drawCenterCrosshair(targetPanel);
+                }
+            });
+        }
+
+        function drawIntersectionLine(panel, x, y, angle) {
+            const container = document.createElement('div');
+            container.className = 'crossref-line';
+            container.style.cssText = `
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                pointer-events: none;
+                z-index: 9999;
+            `;
+
+            const maxDim = Math.max(panel.clientWidth, panel.clientHeight);
+            const lineLength = maxDim * 3;
+
+            const line = document.createElement('div');
+            line.style.cssText = `
+                position: absolute;
+                width: ${lineLength}px;
+                height: 2px;
+                background: linear-gradient(90deg, transparent, #00ffff, transparent);
+                box-shadow: 0 0 8px #00ffff;
+                left: ${x}px;
+                top: ${y}px;
+                transform: translate(-50%, -50%) rotate(${angle}deg);
+                transform-origin: center;
+            `;
+
+            container.appendChild(line);
+            panel.parentElement.appendChild(container);
+        }
+
+        function drawCenterCrosshair(panel) {
+            const container = document.createElement('div');
+            container.className = 'crossref-line';
+            container.style.cssText = `
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                pointer-events: none;
+                z-index: 9999;
+            `;
+
+            const cx = panel.clientWidth / 2;
+            const cy = panel.clientHeight / 2;
+            const size = 25;
+
+            const h = document.createElement('div');
+            h.style.cssText = `
+                position: absolute;
+                left: ${cx - size}px;
+                top: ${cy}px;
+                width: ${size*2}px;
+                height: 1px;
+                background: rgba(0,255,255,0.4);
+            `;
+
+            const v = document.createElement('div');
+            v.style.cssText = `
+                position: absolute;
+                left: ${cx}px;
+                top: ${cy - size}px;
+                width: 1px;
+                height: ${size*2}px;
+                background: rgba(0,255,255,0.4);
+            `;
+
+            container.appendChild(h);
+            container.appendChild(v);
+            panel.parentElement.appendChild(container);
+        }
+
+        function applySplitLayout() {
+            if (splitGridSelection.size === 0) return;
+            const indices = Array.from(splitGridSelection).sort((a, b) => a - b);
+            const rows = new Set();
+            const cols = new Set();
+            indices.forEach(index => {
+                rows.add(Math.floor(index / 6));
+                cols.add(index % 6);
+            });
+            applySplitViewLayout(rows.size, cols.size);
+            updateStatus(`Layout: ${rows.size}x${cols.size}`);
+            document.getElementById("splitWindowDropdown").classList.remove("show");
+        }
+
+        function applySplitViewLayout(rows, cols) {
+            const imageContainer = document.querySelector(".image-container");
+            enabledElements.forEach(el => {
+                try { cornerstone.disable(el); } catch (e) {}
+            });
+            enabledElements = [];
+            panelImagePositions.clear();
+            imageContainer.innerHTML = "";
+            
+            const gridWrapper = document.createElement("div");
+            gridWrapper.style.cssText = `display:grid;grid-template-rows:repeat(${rows},1fr);grid-template-columns:repeat(${cols},1fr);gap:3px;width:100%;height:100%;background:#1a1a1a;padding:3px`;
+            
+            const totalPanels = rows * cols;
+            isSplitView = true;
+            
+            for (let i = 0; i < totalPanels; i++) {
+                const panelWrapper = document.createElement("div");
+                panelWrapper.style.cssText = "position:relative;background:#000;border:2px solid #333;overflow:hidden";
+                panelWrapper.dataset.panelIndex = i;
+                
+                const panel = document.createElement("div");
+                panel.className = "cornerstone-element";
+                panel.id = i === 0 ? "dicomImage" : `dicomImage${i}`;
+                panel.style.cssText = "width:100%;height:100%;background:#000";
+                
+                const overlay = createOverlay(i);
+                const dropZone = createDropZone(i);
+                
+                panelWrapper.appendChild(panel);
+                panelWrapper.appendChild(overlay);
+                panelWrapper.appendChild(dropZone);
+                gridWrapper.appendChild(panelWrapper);
+
+                panel.addEventListener('mouseleave', function() {
+                    panelWrapper.style.borderColor = '#333';
+                    panelWrapper.style.boxShadow = 'none';
+                    
+                    enabledElements.forEach((p) => {
+                        if (p !== panel) {
+                            removeCrossReferenceLines(p);
+                        }
+                    });
+                });
+
+                panel.addEventListener('wheel', handleMouseWheel, { passive: false });
+                
+                setupPanelDragDrop(panelWrapper, panel, i);
+                
+                setTimeout(() => initializePanel(panel, i), i * 50);
+            }
+            
+            imageContainer.appendChild(gridWrapper);
+            element = document.getElementById("dicomImage");
+            loaded = true;
+            if (activeTool) {
+                setTimeout(() => activateTool(activeTool), (totalPanels * 50) + 200);
+            }
+        }
+
+        function createOverlay(index) {
+            const overlay = document.createElement("div");
+            overlay.className = "viewport-overlay";
+            overlay.innerHTML = `
+                <div class="overlay-top-left" id="topLeft_${index}"></div>
+                <div class="overlay-top-right" id="topRight_${index}"></div>
+                <div class="overlay-bottom-left" id="bottomLeft_${index}"></div>
+                <div class="overlay-bottom-right" id="bottomRight_${index}"></div>
+            `;
+            return overlay;
+        }
+
+        function createDropZone(index) {
+            const dropZone = document.createElement("div");
+            dropZone.style.cssText = "position:absolute;top:0;left:0;width:100%;height:100%;display:none;background:rgba(0,102,204,0.3);border:3px dashed #0066cc;align-items:center;justify-content:center;color:#fff;font-size:13px;font-weight:bold;pointer-events:none;z-index:1000";
+            dropZone.textContent = "Drop DICOM here";
+            dropZone.id = `dropzone_${index}`;
+            return dropZone;
+        }
+
+        function initializePanel(panel, panelIndex) {
+            try {
+                cornerstone.enable(panel);
+                enabledElements.push(panel);
+                
+                const tools = [
+                    cornerstoneTools.WwwcTool,
+                    cornerstoneTools.ZoomTool,
+                    cornerstoneTools.PanTool,
+                    cornerstoneTools.MagnifyTool,
+                    cornerstoneTools.LengthTool,
+                    cornerstoneTools.AngleTool,
+                    cornerstoneTools.ProbeTool,
+                    cornerstoneTools.EllipticalRoiTool,
+                    cornerstoneTools.RectangleRoiTool,
+                    cornerstoneTools.FreehandRoiTool,
+                    cornerstoneTools.ArrowAnnotateTool,
+                    cornerstoneTools.BidirectionalTool,
+                    cornerstoneTools.EraserTool
+                ];
+                
+                tools.forEach(tool => cornerstoneTools.addToolForElement(panel, tool));
+                
+                panel.addEventListener("cornerstoneimagerendered", () => {
+                    updatePanelOverlay(panel, panelIndex);
+                    if (focusedElement === panel) {
+                        drawCrossReferenceLines();
+                    }
+                });
+                
+                if (panelIndex === 0 && studyImages.length > 0) {
+                    loadImageToPanel(panel, currentImageIndex, panelIndex);
+                }
+            } catch (error) {
+            }
+        }
+
+        function loadImageToPanel(panel, imageIndex, panelIndex) {
+            if (!studyImages || imageIndex < 0 || imageIndex >= studyImages.length) return;
+            const imageId = studyImages[imageIndex].imageId;
+            const fileName = studyImages[imageIndex].fileName;
+            
+            if (imageCache.has(imageId)) {
+                const cachedImage = imageCache.get(imageId);
+                try {
+                    const viewport = cornerstone.getDefaultViewportForImage(panel, cachedImage);
+                    if (cachedImage.windowWidth && cachedImage.windowWidth > 0) viewport.voi.windowWidth = cachedImage.windowWidth;
+                    if (cachedImage.windowCenter) viewport.voi.windowCenter = cachedImage.windowCenter;
+                    cornerstone.displayImage(panel, cachedImage, viewport);
+                    if (cachedImage.data) {
+                        currentDicomData = cachedImage.data;
+                        panelImagePositions.set(panel, {
+                            imageIndex: imageIndex,
+                            imageData: cachedImage.data
+                        });
+                    }
+                    setTimeout(() => {
+                        cornerstone.resize(panel, true);
+                        fitImageToPanelViewport(panel, cachedImage);
+                        updatePanelOverlay(panel, panelIndex);
+                        setTimeout(() => {
+                            if (focusedElement) {
+                                drawCrossReferenceLines();
+                            }
+                        }, 100);
+                    }, 150);
+                    return;
+                } catch (e) {
+                }
+            }
+            
+            cornerstone.loadImage(imageId).then((image) => {
+                const viewport = cornerstone.getDefaultViewportForImage(panel, image);
+                if (image.windowWidth && image.windowWidth > 0) viewport.voi.windowWidth = image.windowWidth;
+                if (image.windowCenter) viewport.voi.windowCenter = image.windowCenter;
+                cornerstone.displayImage(panel, image, viewport);
+                
+                try { imageCache.set(imageId, image); } catch (e) {}
+                
+                if (image.data) {
+                    currentDicomData = image.data;
+                    panelImagePositions.set(panel, {
+                        imageIndex: imageIndex,
+                        imageData: image.data
+                    });
+                }
+                
+                setTimeout(() => {
+                    cornerstone.resize(panel, true);
+                    fitImageToPanelViewport(panel, image);
+                    updatePanelOverlay(panel, panelIndex);
+                    if (focusedElement) {
+                        drawCrossReferenceLines();
+                    }
+                }, 150);
+            }).catch((error) => {
+                updateStatus(`Error: ${fileName}`);
+            });
+        }
+
+        function fitImageToPanelViewport(panel, image) {
+            try {
+                const viewport = cornerstone.getViewport(panel);
+                const containerWidth = panel.clientWidth;
+                const containerHeight = panel.clientHeight;
+                if (containerWidth > 0 && containerHeight > 0) {
+                    const imageAspectRatio = image.width / image.height;
+                    const containerAspectRatio = containerWidth / containerHeight;
+                    const scale = (imageAspectRatio > containerAspectRatio ? 
+                        containerWidth / image.width : 
+                        containerHeight / image.height) * 0.85;
+                    viewport.scale = scale;
+                    viewport.translation.x = 0;
+                    viewport.translation.y = 0;
+                    cornerstone.setViewport(panel, viewport);
+                }
+            } catch (error) {
+            }
+        }
+
+        function setupPanelDragDrop(panelWrapper, panel, panelIndex) {
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                panelWrapper.addEventListener(eventName, (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }, false);
+            });
+
+            ['dragenter', 'dragover'].forEach(eventName => {
+                panelWrapper.addEventListener(eventName, () => {
+                    document.getElementById(`dropzone_${panelIndex}`).style.display = "flex";
+                    panelWrapper.classList.add('panel-drop-active');
+                }, false);
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                panelWrapper.addEventListener(eventName, () => {
+                    document.getElementById(`dropzone_${panelIndex}`).style.display = "none";
+                    panelWrapper.classList.remove('panel-drop-active');
+                }, false);
+            });
+
+            panelWrapper.addEventListener('drop', (e) => {
+                const imageIndexData = e.dataTransfer.getData('imageIndex');
+                if (imageIndexData) {
+                    const imageIndex = parseInt(imageIndexData, 10);
+                    if (!isNaN(imageIndex) && studyImages[imageIndex]) {
+                        loadImageToPanel(panel, imageIndex, panelIndex);
+                        updateStatus(`Image ${imageIndex + 1} loaded to panel ${panelIndex + 1}`);
+                    }
+                } else if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                    handlePanelFileDrop(e.dataTransfer.files[0], panel, panelIndex);
+                }
+            }, false);
+        }
+
+        function tryAlternativeImageLoad(dataSet, panel, panelIndex, fileName) {
+            try {
+                const rows = dataSet.uint16('x00280010');
+                const columns = dataSet.uint16('x00280011');
+                const bitsAllocated = dataSet.uint16('x00280100');
+                const samplesPerPixel = dataSet.uint16('x00280002') || 1;
+                
+                updateStatus(`Image is ${columns}x${rows} - this format requires server-side conversion`);
+                
+                setTimeout(() => {
+                    updateStatus(`${fileName} requires conversion - please use uncompressed DICOM`);
+                }, 2000);
+                
+            } catch (error) {
+                updateStatus(`Cannot process ${fileName}`);
+            }
+        }
+
+        function handlePanelFileDrop(file, panel, panelIndex) {
+            if (!file.name.toLowerCase().endsWith('.dcm') && !file.type.includes('dicom')) {
+                updateStatus(`Please drop a DICOM file`);
+                return;
+            }
+            
+            updateStatus(`Loading ${file.name}...`);
+            
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                try {
+                    const arrayBuffer = e.target.result;
+                    const byteArray = new Uint8Array(arrayBuffer);
+                    
+                    const dataSet = dicomParser.parseDicom(byteArray);
+                    
+                    const imageId = cornerstoneWADOImageLoader.wadouri.fileManager.add(file);
+                    
+                    const loadTimeout = setTimeout(() => {
+                        try {
+                            const transferSyntax = dataSet.string('x00020010');
+                            
+                            updateStatus(`File uses transfer syntax: ${transferSyntax || 'unknown'} - may not be supported`);
+                        } catch (err) {
+                            updateStatus(`Timeout loading ${file.name}`);
+                        }
+                    }, 10000);
+                    
+                    const loadOptions = {
+                        priority: 5,
+                        requestType: 'interaction'
+                    };
+                    
+                    cornerstone.loadImage(imageId, loadOptions).then((image) => {
+                        clearTimeout(loadTimeout);
+                        
+                        try {
+                            const viewport = cornerstone.getDefaultViewportForImage(panel, image);
+                            if (image.windowWidth && image.windowWidth > 0) viewport.voi.windowWidth = image.windowWidth;
+                            if (image.windowCenter) viewport.voi.windowCenter = image.windowCenter;
+                            
+                            cornerstone.displayImage(panel, image, viewport);
+                            
+                            if (image.data) {
+                                currentDicomData = image.data;
+                                panelImagePositions.set(panel, {
+                                    imageIndex: -1,
+                                    imageData: image.data
+                                });
+                            }
+                            
+                            setTimeout(() => {
+                                cornerstone.resize(panel, true);
+                                fitImageToPanelViewport(panel, image);
+                                updatePanelOverlay(panel, panelIndex);
+                                if (focusedElement) {
+                                    drawCrossReferenceLines();
+                                }
+                            }, 100);
+                            updateStatus(`${file.name} loaded to panel ${panelIndex + 1}`);
+                        } catch (error) {
+                            clearTimeout(loadTimeout);
+                            updateStatus(`Error displaying ${file.name}`);
+                        }
+                    }).catch((error) => {
+                        clearTimeout(loadTimeout);
+                        
+                        const transferSyntax = dataSet.string('x00020010');
+                        
+                        if (transferSyntax === '1.2.840.10008.1.2.4.70' || 
+                            transferSyntax === '1.2.840.10008.1.2.4.57' ||
+                            transferSyntax === '1.2.840.10008.1.2.4.50') {
+                            
+                            updateStatus(`Converting ${file.name}...`);
+                            
+                            tryAlternativeImageLoad(dataSet, panel, panelIndex, file.name);
+                        } else {
+                            updateStatus(`Unsupported format: ${file.name} (${transferSyntax})`);
+                        }
+                    });
+                } catch (error) {
+                    updateStatus(`Error parsing ${file.name}`);
+                }
+            };
+            
+            reader.onerror = function(error) {
+                updateStatus(`Error reading ${file.name}`);
+            };
+            
+            reader.readAsArrayBuffer(file);
+        }
+
+        function updatePanelOverlay(panel, panelIndex) {
+            try {
+                const enabledElement = cornerstone.getEnabledElement(panel);
+                if (!enabledElement || !enabledElement.image) return;
+                
+                const image = enabledElement.image;
+                const viewport = cornerstone.getViewport(panel);
+                const dataset = image.data;
+                
+                updateOverlayContent(`topLeft_${panelIndex}`, dataset, viewport, image, 'topLeft');
+                updateOverlayContent(`topRight_${panelIndex}`, dataset, viewport, image, 'topRight');
+                updateOverlayContent(`bottomLeft_${panelIndex}`, dataset, viewport, image, 'bottomLeft');
+                updateOverlayContent(`bottomRight_${panelIndex}`, dataset, viewport, image, 'bottomRight');
+            } catch (error) {
+            }
+        }
+
+        function updateOverlayContent(elementId, dataset, viewport, image, position) {
+            const element = document.getElementById(elementId);
+            if (!element) return;
+
+            switch(position) {
+                case 'topLeft':
+                    if (dataset) {
+                        const patientName = getTagValue(dataset, 'x00100010') || "Unknown";
+                        const patientId = getTagValue(dataset, 'x00100020') || "";
+                        const studyDate = getTagValue(dataset, 'x00080020') || "";
+                        const studyTime = getTagValue(dataset, 'x00080030') || "";
+                        const institutionName = getTagValue(dataset, 'x00080080') || "";
+                        const formattedDateTime = formatOverlayDateTime(studyDate, studyTime);
+                        element.innerHTML = `${patientName}  [MR${patientId}]<br>${formattedDateTime}<br>${institutionName}`;
+                    }
+                    break;
+                case 'topRight':
+                    const zoom = (viewport.scale * 100).toFixed(0);
+                    element.innerHTML = `Zoom: ${zoom}%<br>Lossless`;
+                    break;
+                case 'bottomLeft':
+                    if (dataset) {
+                        const modality = getTagValue(dataset, 'x00080060') || "CR";
+                        const seriesNumber = getTagValue(dataset, 'x00200011') || "1";
+                        const instanceNumber = getTagValue(dataset, 'x00200013') || "1";
+                        element.innerHTML = `${modality}<br>Seq: ${seriesNumber}<br>${instanceNumber}`;
+                    }
+                    break;
+                case 'bottomRight':
+                    const ww = Math.round(viewport.voi.windowWidth);
+                    const wc = Math.round(viewport.voi.windowCenter);
+                    const imageSize = `${image.width} x ${image.height}`;
+                    element.innerHTML = `${imageSize}<br>WL: ${wc}<br>WW: ${ww}`;
+                    break;
+            }
+        }
+
+        function initializeCornerstone() {
+            cornerstoneTools.external.Hammer = Hammer;
+            cornerstoneTools.external.cornerstone = cornerstone;
+            cornerstoneTools.external.cornerstoneMath = cornerstoneMath;
+            cornerstoneWADOImageLoader.external.dicomParser = dicomParser;
+            cornerstoneWADOImageLoader.external.cornerstone = cornerstone;
+            cornerstoneTools.init({
+                showSVGCursors: true,
+                mouseEnabled: true,
+                touchEnabled: true,
+            });
+            element = document.getElementById("dicomImage");
+            try {
+                cornerstone.getEnabledElement(element);
+            } catch (e) {
+                cornerstone.enable(element);
+                enabledElements.push(element);
+            }
+        }
+
+        function prefetchImagesAround(index, radius = 2) {
+            if (!studyImages || studyImages.length === 0) return;
+            const start = Math.max(0, index - radius);
+            const end = Math.min(studyImages.length - 1, index + radius);
+            for (let i = start; i <= end; i++) {
+                const imageId = studyImages[i].imageId;
+                if (!imageCache.has(imageId)) {
+                    cornerstone.loadImage(imageId).then(img => {
+                        try { imageCache.set(imageId, img); } catch (e) {}
+                    }).catch(() => {});
+                }
+            }
+        }
+
+        function backgroundLoadMetadata(concurrency = 6) {
+            if (!studyImages || studyImages.length === 0) return;
+            const queue = studyImages.map((si, idx) => ({ si, idx }));
+            let active = 0;
+
+            function next() {
+                if (queue.length === 0) return;
+                if (active >= concurrency) return;
+                const item = queue.shift();
+                active++;
+                const imageId = item.si.imageId;
+                if (item.si.seriesNumber && item.si.instanceNumber) {
+                    active--;
+                    setTimeout(next, 0);
+                    return;
+                }
+                cornerstone.loadImage(imageId).then(img => {
+                    try {
+                        const ds = img.data;
+                        if (!ds) return;
+                        const sNum = safeString(ds, 'x00200011');
+                        const iNum = safeString(ds, 'x00200013');
+                        if (sNum && !studyImages[item.idx].seriesNumber) studyImages[item.idx].seriesNumber = sNum;
+                        if (iNum && !studyImages[item.idx].instanceNumber) studyImages[item.idx].instanceNumber = iNum;
+                        updateSeriesGroupsIncremental(item.idx);
+                    } catch (e) {
+                    }
+                }).catch(() => {
+                }).finally(() => {
+                    active--;
+                    setTimeout(next, 0);
+                });
+                setTimeout(next, 0);
+            }
+
+            for (let i = 0; i < concurrency; i++) next();
+        }
+
+        function safeString(dataSet, tag) {
+            try {
+                const v = dataSet.string(tag);
+                return (v && v.trim()) ? v.trim() : null;
+            } catch (e) {
+                return null;
+            }
+        }
+
+        function updateSeriesGroupsIncremental(index) {
+            try {
+                const img = studyImages[index];
+                if (!img) return;
+                const seriesNum = img.seriesNumber || (img.metadata && (img.metadata.series_number || img.metadata.seriesNumber));
+                const seriesDesc = img.metadata && (img.metadata.series_description || img.metadata.seriesDescription) ? (img.metadata.series_description || img.metadata.seriesDescription) : 'Series';
+                const key = `${seriesNum}_${seriesDesc}`;
+                if (!seriesGroups[key]) {
+                    seriesGroups[key] = { seriesNumber: seriesNum, seriesDescription: seriesDesc, images: [] };
+                }
+                const found = seriesGroups[key].images.find(i => i.originalIndex === index);
+                if (!found) {
+                    seriesGroups[key].images.push({ ...img, originalIndex: index });
+                    try {
+                        seriesGroups[key].images.sort((a, b) => {
+                            const aNum = parseInt(a.instanceNumber || a.metadata.instance_number || a.metadata.instanceNumber || 0) || 0;
+                            const bNum = parseInt(b.instanceNumber || b.metadata.instance_number || b.metadata.instanceNumber || 0) || 0;
+                            return aNum - bNum;
+                        });
+                    } catch (e) {}
+                }
+            } catch (e) {}
+        }
+
+        async function loadStudyImages(studyUID) {
+            try {
+                updateStatus("Loading study...");
+                const response = await fetch(`/api/studies/${studyUID}/images/`);
+                const data = await response.json();
+                
+                if (data.success && data.images && data.images.length > 0) {
+                    studyImages = data.images.map((image, idx) => {
+                        const seriesNumber = image.series_number || image.seriesNumber || null;
+                        const instanceNumber = image.instance_number || image.instanceNumber || null;
+                        const filePath = image.file_path;
+                        const pathParts = filePath.split('/');
+                        const encodedParts = pathParts.map(part => encodeURIComponent(part));
+                        const encodedPath = encodedParts.join('/');
+                        const imageId = `wadouri:/dicom/${encodedPath}`;
+                        return {
+                            imageId: imageId,
+                            fileName: filePath.split('/').pop(),
+                            metadata: image,
+                            seriesNumber: seriesNumber,
+                            instanceNumber: instanceNumber
+                        };
+                    });
+                    
+                    seriesGroups = {};
+                    studyImages.forEach((img, idx) => {
+                        const seriesNum = img.seriesNumber || (img.metadata && (img.metadata.series_number || img.metadata.seriesNumber)) || 'Unknown';
+                        const seriesDesc = img.metadata && (img.metadata.series_description || img.metadata.seriesDescription) ? (img.metadata.series_description || img.metadata.seriesDescription) : 'Series';
+                        const seriesKey = `${seriesNum}_${seriesDesc}`;
+                        if (!seriesGroups[seriesKey]) {
+                            seriesGroups[seriesKey] = {
+                                seriesNumber: seriesNum,
+                                seriesDescription: seriesDesc,
+                                images: []
+                            };
+                        }
+                        seriesGroups[seriesKey].images.push({ ...img, originalIndex: idx });
+                    });
+                    
+                    Object.keys(seriesGroups).forEach(k => {
+                        try {
+                            seriesGroups[k].images.sort((a, b) => {
+                                const aNum = parseInt(a.instanceNumber || a.metadata.instance_number || a.metadata.instanceNumber || 0) || 0;
+                                const bNum = parseInt(b.instanceNumber || b.metadata.instance_number || b.metadata.instanceNumber || 0) || 0;
+                                return aNum - bNum;
+                            });
+                        } catch (e) {}
+                    });
+                    
+                    totalImages = studyImages.length;
+                    currentImageIndex = 0;
+                    displayStudyHeader(studyImages[0].metadata);
+
+                    try {
+                        const firstImageId = studyImages[0].imageId;
+                        const firstImage = await loadAndViewImage(firstImageId, studyImages[0].metadata);
+                        if (firstImage) {
+                            try { imageCache.set(firstImageId, firstImage); } catch (e) {}
+                        }
+                    } catch (e) {
+                    }
+
+                    updateSeriesList();
+                    activateTool("Wwwc");
+                    prefetchImagesAround(0, 2);
+                    backgroundLoadMetadata(6);
+
+                    if (totalImages > 1) setupImageSlider();
+                    updateStatus("Study loaded");
+                }
+            } catch (error) {
+                updateStatus("Error loading study");
+                updateFooterStatus("Error loading");
+            }
+        }
+
+        function displayStudyHeader(imageMetadata) {
+            const studyHeader = document.getElementById("studyHeader");
+            if (imageMetadata) {
+                const patientName = imageMetadata.patient_name || "";
+                const patientId = imageMetadata.patient_id || "";
+                const studyDate = formatDate(imageMetadata.study_date) || "";
+                const studyDesc = imageMetadata.study_description || "";
+                const modality = imageMetadata.modality || "";
+                const age = calculateAge(imageMetadata.patient_birth_date);
+                const gender = imageMetadata.patient_sex || "";
+                
+                let headerText = "";
+                if (patientName) headerText += `<strong>${patientName}</strong>`;
+                if (patientId) headerText += ` (ID: ${patientId})`;
+                
+                let subText = "";
+                if (age) subText += `${age}y`;
+                if (gender) subText += (subText ? " / " : "") + gender.toUpperCase();
+                if (modality) subText += (subText ? " - " : "") + modality;
+                if (studyDesc) subText += (subText ? " - " : "") + studyDesc;
+                if (studyDate) subText += (subText ? " - " : "") + studyDate;
+                
+                studyHeader.innerHTML = `<div>${headerText}</div>${subText ? `<div style="font-weight:normal;font-size:11px;margin-top:3px;">${subText}</div>` : ''}`;
+                studyHeader.style.display = "block";
+            }
+        }
+
+        function setupEventListeners() {
+            const toolMap = {
+                wwwcTool: "Wwwc", zoomTool: "Zoom", panTool: "Pan", magnifyTool: "Magnify",
+                invertTool: "Invert", lengthTool: "Length", angleTool: "Angle", probeTool: "Probe",
+                ellipticalRoiTool: "EllipticalRoi", rectangleRoiTool: "RectangleRoi", 
+                freehandRoiTool: "FreehandRoi", arrowAnnotateTool: "ArrowAnnotate", 
+                bidirectionalTool: "Bidirectional", eraserTool: "Eraser"
+            };
+
+            Object.entries(toolMap).forEach(([id, tool]) => {
+                document.getElementById(id).addEventListener("click", () => activateTool(tool));
+            });
+
+            document.getElementById("resetTool").addEventListener("click", handleReset);
+            document.getElementById("frameSlider").addEventListener("input", function () {
+                if (loaded && totalImages > 1) {
+                    currentImageIndex = parseInt(this.value, 10);
+                    loadImage(currentImageIndex);
+                }
+            });
+            document.getElementById("playClip").addEventListener("click", togglePlayback);
+            document.getElementById("captureBtn").addEventListener("click", captureScreenshot);
+            window.addEventListener("resize", () => {
+                if (loaded) {
+                    setTimeout(() => {
+                        if (isSplitView) {
+                            enabledElements.forEach(el => {
+                                try { cornerstone.resize(el, true); } catch (e) {}
+                            });
+                            drawCrossReferenceLines();
+                        } else {
+                            cornerstone.resize(element, true);
+                            fitImageToViewport();
+                        }
+                    }, 100);
+                }
+            });
+            document.getElementById("reportBtn").addEventListener("click", function(){
+                openReportWindow();
+            });
+            document.getElementById("split1x2Btn").addEventListener("click", () => {
+                applySplitViewLayout(1, 2);
+                updateStatus("Layout: 1x2");
+            });
+            document.getElementById("mprTool").addEventListener("click", openMPRWindow);
+        }
+
+        function fitImageToViewport() {
+            if (!loaded || !element) return;
+            try {
+                const enabledElement = cornerstone.getEnabledElement(element);
+                if (!enabledElement || !enabledElement.image) return;
+                const image = enabledElement.image;
+                const viewport = cornerstone.getViewport(element);
+                const containerWidth = element.clientWidth;
+                const containerHeight = element.clientHeight;
+                if (containerWidth === 0 || containerHeight === 0) return;
+                const imageAspectRatio = image.width / image.height;
+                const containerAspectRatio = containerWidth / containerHeight;
+                const scale = (imageAspectRatio > containerAspectRatio ? 
+                    containerWidth / image.width : 
+                    containerHeight / image.height) * 0.9;
+                viewport.scale = scale;
+                viewport.translation.x = 0;
+                viewport.translation.y = 0;
+                cornerstone.setViewport(element, viewport);
+            } catch (error) {
+            }
+        }
+
+        function getTagValue(dataset, tag) {
+            if (!dataset) return null;
+            try {
+                const value = dataset.string(tag);
+                return value && value.trim() ? value.trim() : null;
+            } catch (e) {
+                return null;
+            }
+        }
+
+        function openReportWindow() {
+            const availW = screen.availWidth || window.screen.width;
+            const availH = screen.availHeight || window.screen.height;
+            const halfW = Math.floor(availW / 2);
+            const fullH = availH;
+            const leftFeatures = `toolbar=no,menubar=no,location=no,resizable=yes,scrollbars=yes,status=no,width=${halfW},height=${fullH},left=0,top=0`;
+            const rightFeatures = `toolbar=no,menubar=no,location=no,resizable=yes,scrollbars=yes,status=no,width=${halfW},height=${fullH},left=${halfW},top=0`;
+            const viewerWindow = window;
+            const reportWindow = window.open("/static/report.html", 'reportWindowSplit', rightFeatures);
+            if (!reportWindow) {
+                alert("Please allow popups for this site and try again.");
+                return;
+            }
+            try {
+                const currentImage = studyImages[currentImageIndex];
+                const metadata = currentImage ? currentImage.metadata : {};
+                let dicomData = currentDicomData;
+                if (!dicomData) {
+                    try {
+                        const enabledElement = cornerstone.getEnabledElement(element);
+                        if (enabledElement && enabledElement.image && enabledElement.image.data) {
+                            dicomData = enabledElement.image.data;
+                        }
+                    } catch (e) {}
+                }
+                function getReportTagValue(tag) {
+                    if (dicomData) {
+                        try {
+                            const value = dicomData.string(tag);
+                            if (value && value.trim()) return value.trim();
+                        } catch (e) {}
+                    }
+                    return null;
+                }
+                const patientName = metadata.patient_name || getReportTagValue('x00100010') || "";
+                const patientIdRaw = metadata.patient_id || getReportTagValue('x00100020') || "";
+                const formattedPatientId = (patientIdRaw && patientIdRaw.replace(/\D/g, '')) || patientIdRaw || "";
+                const patientData = {
+                    dicomImageId: metadata.id || currentImage && currentImage.id || "",
+                    patientId: patientIdRaw,
+                    formattedPatientId: formattedPatientId,
+                    patientName: patientName,
+                    patientAge: calculateAge(metadata.patient_birth_date || getReportTagValue('x00100030')) || "",
+                    patientGender: formatGender(metadata.patient_sex || getReportTagValue('x00100040')) || "",
+                    examDate: formatDate(metadata.study_date || getReportTagValue('x00080020')) || "",
+                    examTime: formatTime(metadata.study_time || getReportTagValue('x00080030')) || "",
+                    modality: metadata.modality || getReportTagValue('x00080060') || "",
+                    studyDescription: metadata.study_description || getReportTagValue('x00081030') || "",
+                    institution: metadata.institution_name || getReportTagValue('x00080080') || "",
+                    referringPhysician: metadata.referring_physician || getReportTagValue('x00080090') || "",
+                    studyId: metadata.study_id || getReportTagValue('x00200010') || "",
+                    accessionNumber: metadata.accession_number || getReportTagValue('x00080050') || "",
+                    protocolName: metadata.protocol_name || getReportTagValue('x00181030') || "",
+                    reportContent: ''
+                };
+                try { localStorage.setItem('patientDataForReport', JSON.stringify(patientData)); } catch(e){}
+                let attempts = 0;
+                (function sendDataLoop() {
+                  if (attempts++ > 50) return;
+                  try {
+                    if (reportWindow && !reportWindow.closed) {
+                      reportWindow.postMessage({ type: 'patientData', data: patientData }, window.location.origin);
+                    }
+                  } catch (e) {}
+                  setTimeout(sendDataLoop, 300);
+                })();
+                setTimeout(function arrangeWindows(attemptsLeft = 10) {
+                  try {
+                    if (viewerWindow && !viewerWindow.closed) {
+                      if (typeof viewerWindow.moveTo === 'function') viewerWindow.moveTo(0, 0);
+                      if (typeof viewerWindow.resizeTo === 'function') viewerWindow.resizeTo(halfW, fullH);
+                    }
+                    if (reportWindow && !reportWindow.closed) {
+                      if (typeof reportWindow.moveTo === 'function') reportWindow.moveTo(halfW, 0);
+                      if (typeof reportWindow.resizeTo === 'function') reportWindow.resizeTo(halfW, fullH);
+                    }
+                  } catch (e) {}
+                  if (attemptsLeft > 0) setTimeout(() => arrangeWindows(attemptsLeft - 1), 200);
+                }, 100);
+                return;
+            } catch (error) {
+                return;
+            }
+        }
+
+        function calculateAge(birthDate) {
+            if (!birthDate || birthDate.length < 8) return "";
+            try {
+                const year = parseInt(birthDate.substring(0, 4));
+                const month = parseInt(birthDate.substring(4, 6)) - 1;
+                const day = parseInt(birthDate.substring(6, 8));
+                const birth = new Date(year, month, day);
+                const today = new Date();
+                let age = today.getFullYear() - birth.getFullYear();
+                const monthDiff = today.getMonth() - birth.getMonth();
+                if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) age--;
+                return age.toString();
+            } catch (error) {
+                return "";
+            }
+        }
+        
+        function formatGender(gender) {
+            if (!gender) return "";
+            const g = gender.toUpperCase().trim();
+            const genderMap = { 'M': 'Male', 'F': 'Female', 'O': 'Other' };
+            return genderMap[g] || gender;
+        }
+        
+        function formatDate(dicomDate) {
+            if (!dicomDate || dicomDate.length < 8) return "";
+            try {
+                return `${dicomDate.substring(4, 6)}/${dicomDate.substring(6, 8)}/${dicomDate.substring(0, 4)}`;
+            } catch (error) {
+                return dicomDate;
+            }
+        }
+        
+        function formatTime(dicomTime) {
+            if (!dicomTime || dicomTime.length < 6) return "";
+            try {
+                const timeStr = dicomTime.split('.')[0];
+                return `${timeStr.substring(0, 2)}:${timeStr.substring(2, 4)}:${timeStr.substring(4, 6)}`;
+            } catch (error) {
+                return dicomTime;
+            }
+        }
+
+        function formatOverlayDateTime(dicomDate, dicomTime) {
+            let result = "";
+            if (dicomDate && dicomDate.length >= 8) {
+                result = `${dicomDate.substring(6, 8)}-${dicomDate.substring(4, 6)}-${dicomDate.substring(0, 4)}`;
+            }
+            if (dicomTime && dicomTime.length >= 6) {
+                const timeStr = dicomTime.split('.')[0];
+                result += ` ${timeStr.substring(0, 2)}:${timeStr.substring(2, 4)}:${timeStr.substring(4, 6)}`;
+            }
+            return result;
+        }
+
+        function initializeTools() {
+            const tools = [
+                cornerstoneTools.WwwcTool,
+                cornerstoneTools.ZoomTool,
+                cornerstoneTools.PanTool,
+                cornerstoneTools.MagnifyTool,
+                cornerstoneTools.LengthTool,
+                cornerstoneTools.AngleTool,
+                cornerstoneTools.ProbeTool,
+                cornerstoneTools.EllipticalRoiTool,
+                cornerstoneTools.RectangleRoiTool,
+                cornerstoneTools.FreehandRoiTool,
+                cornerstoneTools.ArrowAnnotateTool,
+                cornerstoneTools.BidirectionalTool,
+                cornerstoneTools.EraserTool
+            ];
+            tools.forEach(tool => cornerstoneTools.addTool(tool));
+        }
+
+        async function loadAndViewImage(imageId, imageMetadata = null) {
+            updateStatus("Loading image...");
+            
+            try {
+                if (imageCache.has(imageId)) {
+                    const cached = imageCache.get(imageId);
+                    const defaultViewport = cornerstone.getDefaultViewportForImage(element, cached);
+                    if (cached.windowWidth && cached.windowWidth > 0) defaultViewport.voi.windowWidth = cached.windowWidth;
+                    if (cached.windowCenter) defaultViewport.voi.windowCenter = cached.windowCenter;
+                    cornerstone.displayImage(element, cached, defaultViewport);
+                    loaded = true;
+                    if (cached.data) currentDicomData = cached.data;
+                    updateImageInfo();
+                    element.removeEventListener("cornerstoneimagerendered", onImageRendered);
+                    element.addEventListener("cornerstoneimagerendered", onImageRendered);
+                    fitImageToViewport();
+                    prefetchImagesAround(currentImageIndex, 2);
+                    return cached;
+                }
+
+                const image = await cornerstone.loadImage(imageId, { priority: 5, requestType: 'interaction' });
+                
+                const defaultViewport = cornerstone.getDefaultViewportForImage(element, image);
+                if (image.windowWidth && image.windowWidth > 0) defaultViewport.voi.windowWidth = image.windowWidth;
+                if (image.windowCenter) defaultViewport.voi.windowCenter = image.windowCenter;
+                cornerstone.displayImage(element, image, defaultViewport);
+                loaded = true;
+                
+                try { imageCache.set(imageId, image); } catch (e) {}
+                
+                if (image.data) currentDicomData = image.data;
+                
+                updateImageInfo();
+                element.removeEventListener("cornerstoneimagerendered", onImageRendered);
+                element.addEventListener("cornerstoneimagerendered", onImageRendered);
+                fitImageToViewport();
+
+                const idx = studyImages.findIndex(si => si.imageId === imageId);
+                if (idx !== -1) prefetchImagesAround(idx, 2);
+
+                return image;
+            } catch (error) {
+                updateStatus("Error loading image");
+                throw error;
+            }
+        }
+
+        function updateSeriesList() {
+            const container = document.getElementById("stackWrapper");
+            container.innerHTML = "";
+            
+            const seriesKeys = Object.keys(seriesGroups);
+            
+            seriesKeys.forEach((seriesKey, index) => {
+                const seriesData = seriesGroups[seriesKey];
+                const seriesGroup = document.createElement("div");
+                seriesGroup.className = "series-group";
+                
+                const header = document.createElement("div");
+                header.className = "series-group-header";
+                header.textContent = `#Series${index + 1}`;
+                seriesGroup.appendChild(header);
+                
+                const thumbnails = document.createElement("div");
+                thumbnails.className = "series-thumbnails";
+                
+                const firstImageItem = seriesData.images[0];
+                const card = createThumbnailCard(firstImageItem, firstImageItem.originalIndex, seriesKey);
+                thumbnails.appendChild(card);
+                
+                seriesGroup.appendChild(thumbnails);
+                container.appendChild(seriesGroup);
+            });
+        }
+
+        function createThumbnailCard(imageItem, index, seriesKey) {
+            const card = document.createElement("div");
+            card.className = `series-thumbnail ${index === currentImageIndex ? 'active' : ''}`;
+            card.draggable = true;
+            card.dataset.imageIndex = index;
+            card.dataset.seriesKey = seriesKey;
+            
+            const seriesData = seriesGroups[seriesKey];
+            const totalInSeries = seriesData ? seriesData.images.length : 1;
+            
+            card.innerHTML = `
+                <div class="thumbnail-wrapper">
+                    <div style="color: #fff; display: flex; align-items: center; justify-content: center; height: 100%; font-size: 11px;">
+                        <i class="fas fa-spinner fa-spin" style="margin-right: 5px;"></i> Loading...
+                    </div>
+                </div>
+            `;
+            
+            const badge = document.createElement("div");
+            badge.className = "image-count-badge";
+            badge.textContent = `1/${totalInSeries}`;
+            card.appendChild(badge);
+            
+            card.addEventListener('dragstart', (e) => {
+                e.dataTransfer.effectAllowed = 'copy';
+                e.dataTransfer.setData('imageIndex', index.toString());
+                card.classList.add('dragging');
+            });
+            
+            card.addEventListener('dragend', () => {
+                card.classList.remove('dragging');
+            });
+            
+            const thumbnailWrapper = card.querySelector(".thumbnail-wrapper");
+            loadThumbnailImage(thumbnailWrapper, imageItem.imageId);
+
+            card.addEventListener("click", () => {
+                currentImageIndex = index;
+                loadImage(currentImageIndex);
+                updateSeriesSelection();
+                updateStatus(`Image ${index + 1}`);
+            });
+            
+            return card;
+        }
+
+        function loadThumbnailImage(thumbnailWrapper, imageId) {
+            try {
+                const thumbnailElement = document.createElement("div");
+                thumbnailElement.style.cssText = "width:100%;height:100%;background:#000";
+                cornerstone.enable(thumbnailElement);
+
+                if (imageCache.has(imageId)) {
+                    try {
+                        const thumbnailImage = imageCache.get(imageId);
+                        const viewport = cornerstone.getDefaultViewportForImage(thumbnailElement, thumbnailImage);
+                        cornerstone.displayImage(thumbnailElement, thumbnailImage, viewport);
+                        thumbnailWrapper.innerHTML = "";
+                        thumbnailWrapper.appendChild(thumbnailElement);
+                        setTimeout(() => {
+                            cornerstone.resize(thumbnailElement, true);
+                            cornerstone.fitToWindow(thumbnailElement);
+                        }, 50);
+                        return;
+                    } catch (e) {}
+                }
+
+                cornerstone.loadImage(imageId)
+                    .then((thumbnailImage) => {
+                        const viewport = cornerstone.getDefaultViewportForImage(thumbnailElement, thumbnailImage);
+                        cornerstone.displayImage(thumbnailElement, thumbnailImage, viewport);
+                        thumbnailWrapper.innerHTML = "";
+                        thumbnailWrapper.appendChild(thumbnailElement);
+                        try { imageCache.set(imageId, thumbnailImage); } catch (e) {}
+                        setTimeout(() => {
+                            cornerstone.resize(thumbnailElement, true);
+                            cornerstone.fitToWindow(thumbnailElement);
+                        }, 50);
+                    })
+                    .catch((error) => {
+                        thumbnailWrapper.innerHTML = '<div style="color: #fff; padding: 20px; text-align: center; font-size: 11px;">Error</div>';
+                    });
+            } catch (error) {
+                thumbnailWrapper.innerHTML = '<div style="color: #fff; padding: 20px; text-align: center; font-size: 11px;">Unavailable</div>';
+            }
+        }
+
+        function updateSeriesSelection() {
+            document.querySelectorAll(".series-thumbnail").forEach((thumb) => {
+                const thumbIndex = parseInt(thumb.dataset.imageIndex);
+                const thumbSeriesKey = thumb.dataset.seriesKey;
+                const isActive = thumbIndex === currentImageIndex;
+                thumb.classList.toggle("active", isActive);
+                
+                if (isActive && thumbSeriesKey) {
+                    const seriesData = seriesGroups[thumbSeriesKey];
+                    if (seriesData) {
+                        const imagesInSeries = seriesData.images;
+                        const currentIndexInSeries = imagesInSeries.findIndex(img => img.originalIndex === currentImageIndex);
+                        if (currentIndexInSeries !== -1) {
+                            const badge = thumb.querySelector(".image-count-badge");
+                            if (badge) {
+                                badge.textContent = `${currentIndexInSeries + 1}/${imagesInSeries.length}`;
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        async function loadImage(imageIndex) {
+            if (!studyImages || imageIndex < 0 || imageIndex >= studyImages.length) return;
+            try {
+                const imageItem = studyImages[imageIndex];
+                if (isSplitView) {
+                    const firstPanel = document.getElementById("dicomImage");
+                    if (firstPanel) loadImageToPanel(firstPanel, imageIndex, 0);
+                } else {
+                    await loadAndViewImage(imageItem.imageId, imageItem.metadata);
+                }
+                currentImageIndex = imageIndex;
+                prefetchImagesAround(imageIndex, 3);
+                updateImageInfo();
+            } catch (error) {
+                updateStatus(`Error loading image ${imageIndex + 1}`);
+            }
+        }
+
+        function setupImageSlider() {
+            const slider = document.getElementById("frameSlider");
+            slider.min = 0;
+            slider.max = totalImages - 1;
+            slider.value = currentImageIndex;
+            slider.parentElement.style.display = totalImages > 1 ? "flex" : "none";
+        }
+
+        function updateImageSlider() {
+            document.getElementById("frameSlider").value = currentImageIndex;
+            document.getElementById("frameCounter").textContent = `Image: ${currentImageIndex + 1}/${totalImages}`;
+        }
+
+        function updateImageInfo() {
+            updateImageSlider();
+            updateViewportOverlay();
+        }
+        
+        function updateViewportOverlay() {
+            if (!loaded || !studyImages[currentImageIndex] || isSplitView) return;
+            
+            try {
+                const enabledElement = cornerstone.getEnabledElement(element);
+                if (!enabledElement || !enabledElement.image) return;
+                
+                const image = enabledElement.image;
+                const viewport = cornerstone.getViewport(element);
+                const dataset = currentDicomData || image.data;
+                
+                updateOverlayContent('topLeft', dataset, viewport, image, 'topLeft');
+                updateOverlayContent('topRight', dataset, viewport, image, 'topRight');
+                updateOverlayContent('bottomLeft', dataset, viewport, image, 'bottomLeft');
+                updateOverlayContent('bottomRight', dataset, viewport, image, 'bottomRight');
+            } catch (error) {
+            }
+        }
+
+        function activateTool(toolName) {
+            try {
+                deactivateAllTools();
+                document.querySelectorAll(".toolButton").forEach(button => button.classList.remove("active"));
+                
+                const toolButtonMap = {
+                    Wwwc: "wwwcTool", Zoom: "zoomTool", Pan: "panTool", Magnify: "magnifyTool",
+                    Invert: "invertTool", Length: "lengthTool", Angle: "angleTool", Probe: "probeTool",
+                    EllipticalRoi: "ellipticalRoiTool", RectangleRoi: "rectangleRoiTool", FreehandRoi: "freehandRoiTool",
+                    ArrowAnnotate: "arrowAnnotateTool", Bidirectional: "bidirectionalTool", Eraser: "eraserTool",
+                };
+                
+                if (toolButtonMap[toolName]) {
+                    const button = document.getElementById(toolButtonMap[toolName]);
+                    if (button) button.classList.add("active");
+                }
+                
+                activeTool = toolName;
+                
+                if (toolName === "Invert") {
+                    const elementsToActivate = enabledElements.length > 0 ? enabledElements : [element];
+                    elementsToActivate.forEach(el => {
+                        try {
+                            const enabledElement = cornerstone.getEnabledElement(el);
+                            if (enabledElement) {
+                                el.removeEventListener('click', el._invertClickHandler);
+                                el._invertClickHandler = function() {
+                                    try {
+                                        const viewport = cornerstone.getViewport(el);
+                                        viewport.invert = !viewport.invert;
+                                        cornerstone.setViewport(el, viewport);
+                                        updateStatus(`Colors ${viewport.invert ? 'inverted' : 'restored'}`);
+                                    } catch (e) {
+                                        updateStatus("Error inverting");
+                                    }
+                                };
+                                el.addEventListener('click', el._invertClickHandler);
+                            }
+                        } catch (e) {}
+                    });
+                    updateStatus(`Invert tool activated`);
+                    return;
+                }
+                
+                const elementsToActivate = enabledElements.length > 0 ? enabledElements : [element];
+                elementsToActivate.forEach(el => {
+                    try {
+                        const enabledElement = cornerstone.getEnabledElement(el);
+                        if (enabledElement) {
+                            cornerstoneTools.setToolActiveForElement(el, toolName, { mouseButtonMask: 1 });
+                        }
+                    } catch (e) {}
+                });
+                if (loaded) updateStatus(`${toolName} tool activated`);
+            } catch (error) {
+                updateStatus(`Error activating ${toolName}`);
+            }
+        }
+
+        function deactivateAllTools() {
+            const tools = ["Wwwc", "Zoom", "Pan", "Magnify", "Length", "Angle", "Probe", "EllipticalRoi", "RectangleRoi", "FreehandRoi", "ArrowAnnotate", "Bidirectional", "Eraser"];
+            const elementsToDeactivate = enabledElements.length > 0 ? enabledElements : [element];
+            
+            elementsToDeactivate.forEach(el => {
+                try {
+                    if (el._invertClickHandler) {
+                        el.removeEventListener('click', el._invertClickHandler);
+                        el._invertClickHandler = null;
+                    }
+                } catch (e) {}
+            });
+            
+            tools.forEach(tool => {
+                try {
+                    elementsToDeactivate.forEach(el => {
+                        try {
+                            const enabledElement = cornerstone.getEnabledElement(el);
+                            if (enabledElement) {
+                                cornerstoneTools.setToolPassiveForElement(el, tool);
+                            }
+                        } catch (e) {}
+                    });
+                } catch (error) {}
+            });
+        }
+
+        function handleReset() {
+            if (!loaded) {
+                updateStatus("No image to reset");
+                return;
+            }
+            try {
+                if (isSplitView) {
+                    const targetPanel = focusedElement || document.getElementById("dicomImage");
+                    if (targetPanel) {
+                        try {
+                            cornerstone.reset(targetPanel);
+                            setTimeout(() => {
+                                try {
+                                    const enabledElement = cornerstone.getEnabledElement(targetPanel);
+                                    if (enabledElement && enabledElement.image) {
+                                        fitImageToPanelViewport(targetPanel, enabledElement.image);
+                                    }
+                                } catch (e) {}
+                            }, 50);
+                            const panelIndex = enabledElements.indexOf(targetPanel);
+                            updateStatus(`Panel ${panelIndex + 1} reset`);
+                        } catch (e) {
+                            updateStatus("Error resetting panel");
+                        }
+                    } else {
+                        updateStatus("Hover over panel first");
+                    }
+                } else {
+                    cornerstone.reset(element);
+                    setTimeout(() => fitImageToViewport(), 50);
+                    updateStatus("Image reset");
+                }
+            } catch (error) {
+                updateStatus("Error resetting");
+            }
+        }
+
+        function handleMouseWheel(event) {
+            if (!loaded || totalImages <= 1) return;
+            
+            event.preventDefault();
+            event.stopPropagation();
+            
+            const targetPanel = event.currentTarget;
+            focusedElement = targetPanel;
+            
+            const delta = event.deltaY > 0 ? 1 : -1;
+            
+            let currentPanelImageIndex = currentImageIndex;
+            let currentSeriesNum = null;
+            
+            try {
+                try {
+                    const enabledElement = cornerstone.getEnabledElement(targetPanel);
+                    if (enabledElement && enabledElement.image && enabledElement.image.data) {
+                        currentSeriesNum = safeString(enabledElement.image.data, 'x00200011');
+                        const currentInstanceNum = safeString(enabledElement.image.data, 'x00200013');
+                        if (currentSeriesNum && currentInstanceNum) {
+                            const matchingImage = studyImages.find((img) => {
+                                const imgSeries = img.seriesNumber || img.metadata.series_number || img.metadata.seriesNumber;
+                                const imgInst = img.instanceNumber || img.metadata.instance_number || img.metadata.instanceNumber;
+                                if (imgSeries && imgInst) {
+                                    return String(imgSeries).trim() === String(currentSeriesNum).trim() &&
+                                           String(imgInst).trim() === String(currentInstanceNum).trim();
+                                }
+                                return false;
+                            });
+                            if (matchingImage) currentPanelImageIndex = studyImages.indexOf(matchingImage);
+                        }
+                    }
+                } catch (e) {
+                    currentSeriesNum = null;
+                }
+
+                if (!currentSeriesNum && studyImages[currentPanelImageIndex]) {
+                    currentSeriesNum = studyImages[currentPanelImageIndex].seriesNumber || studyImages[currentPanelImageIndex].metadata.series_number || studyImages[currentPanelImageIndex].metadata.seriesNumber;
+                }
+
+                if (!currentSeriesNum) {
+                    try {
+                        const canvImg = imageCache.get(studyImages[currentPanelImageIndex].imageId);
+                        if (canvImg && canvImg.data) {
+                            currentSeriesNum = safeString(canvImg.data, 'x00200011');
+                        }
+                    } catch (e) {}
+                }
+
+                if (!currentSeriesNum) {
+                    const nextIndex = Math.min(Math.max(currentPanelImageIndex + delta, 0), studyImages.length - 1);
+                    if (nextIndex !== currentPanelImageIndex) {
+                        if (isSplitView) {
+                            const panelIndex = enabledElements.indexOf(targetPanel);
+                            loadImageToPanel(targetPanel, nextIndex, panelIndex);
+                        } else {
+                            loadImage(nextIndex);
+                        }
+                        currentImageIndex = nextIndex;
+                        updateImageSlider();
+                        updateSeriesSelection();
+                    }
+                    return;
+                }
+
+                const normalizedCurrentSeries = String(currentSeriesNum).trim();
+
+                const imagesInSeries = studyImages
+                    .map((img, idx) => ({ img, idx }))
+                    .filter(o => {
+                        const s = o.img.seriesNumber || o.img.metadata.series_number || o.img.metadata.seriesNumber;
+                        if (!s) return false;
+                        return String(s).trim() === normalizedCurrentSeries;
+                    });
+
+                if (imagesInSeries.length <= 1) {
+                    updateStatus(`Single image in series`);
+                    return;
+                }
+
+                imagesInSeries.sort((a, b) => {
+                    const aNum = parseInt(a.img.instanceNumber || a.img.metadata.instance_number || a.img.metadata.instanceNumber) || 0;
+                    const bNum = parseInt(b.img.instanceNumber || b.img.metadata.instance_number || b.img.metadata.instanceNumber) || 0;
+                    return aNum - bNum;
+                });
+
+                const currentIndexInSeries = imagesInSeries.findIndex(o => o.idx === currentPanelImageIndex);
+                let actualCurrentIndexInSeries = currentIndexInSeries;
+                if (currentIndexInSeries === -1) {
+                    try {
+                        const enabledElement = cornerstone.getEnabledElement(targetPanel);
+                        const inst = enabledElement && enabledElement.image && enabledElement.image.data ? safeString(enabledElement.image.data, 'x00200013') : null;
+                        if (inst) {
+                            actualCurrentIndexInSeries = imagesInSeries.findIndex(o => {
+                                const imInst = o.img.instanceNumber || o.img.metadata.instance_number || o.img.metadata.instanceNumber;
+                                return String(imInst).trim() === String(inst).trim();
+                            });
+                        }
+                    } catch (e) {}
+                }
+
+                if (actualCurrentIndexInSeries === -1) {
+                    actualCurrentIndexInSeries = imagesInSeries.findIndex(o => o.idx >= currentPanelImageIndex);
+                    if (actualCurrentIndexInSeries === -1) actualCurrentIndexInSeries = 0;
+                }
+
+                let nextIndexInSeries = actualCurrentIndexInSeries + delta;
+                if (nextIndexInSeries < 0) nextIndexInSeries = 0;
+                if (nextIndexInSeries >= imagesInSeries.length) nextIndexInSeries = imagesInSeries.length - 1;
+
+                if (nextIndexInSeries === actualCurrentIndexInSeries) {
+                    updateStatus(`${delta > 0 ? 'Last' : 'First'} image in series`);
+                    return;
+                }
+
+                const nextGlobalIndex = imagesInSeries[nextIndexInSeries].idx;
+                if (nextGlobalIndex !== undefined && nextGlobalIndex !== -1) {
+                    if (isSplitView) {
+                        const panelIndex = enabledElements.indexOf(targetPanel);
+                        loadImageToPanel(targetPanel, nextGlobalIndex, panelIndex);
+                        setTimeout(() => drawCrossReferenceLines(), 200);
+                    } else {
+                        loadImage(nextGlobalIndex);
+                    }
+                    currentImageIndex = nextGlobalIndex;
+                    updateImageSlider();
+                    updateSeriesSelection();
+                    prefetchImagesAround(nextGlobalIndex, 3);
+                    updateStatus(`Series ${currentSeriesNum}: ${nextIndexInSeries + 1}/${imagesInSeries.length}`);
+                }
+            } catch (error) {
+                updateStatus("Error scrolling series");
+            }
+        }
+
+        function togglePlayback() {
+            if (!loaded || totalImages <= 1) {
+                updateStatus("Playback not available");
+                return;
+            }
+            isPlaying = !isPlaying;
+            const playButton = document.getElementById("playClip");
+            if (isPlaying) {
+                playButton.innerHTML = '<i class="fas fa-pause"></i>';
+                startPlayback();
+                updateStatus("Playback started");
+            } else {
+                playButton.innerHTML = '<i class="fas fa-play"></i>';
+                stopPlayback();
+                updateStatus("Playback stopped");
+            }
+        }
+
+        function startPlayback() {
+            if (playbackInterval) clearInterval(playbackInterval);
+            playbackInterval = setInterval(() => {
+                currentImageIndex = (currentImageIndex + 1) % totalImages;
+                loadImage(currentImageIndex);
+                updateImageSlider();
+                updateSeriesSelection();
+            }, playbackSpeed);
+        }
+
+        function stopPlayback() {
+            if (playbackInterval) {
+                clearInterval(playbackInterval);
+                playbackInterval = null;
+            }
+        }
+
+        function captureScreenshot() {
+            if (!loaded) {
+                updateStatus("No image to capture");
+                return;
+            }
+            try {
+                let canvas;
+                if (isSplitView) {
+                    const imageContainer = document.querySelector(".image-container");
+                    const canvases = imageContainer.querySelectorAll("canvas");
+                    if (canvases.length === 0) {
+                        updateStatus("No canvas found");
+                        return;
+                    }
+                    const compositeCanvas = document.createElement("canvas");
+                    compositeCanvas.width = imageContainer.clientWidth;
+                    compositeCanvas.height = imageContainer.clientHeight;
+                    const ctx = compositeCanvas.getContext("2d");
+                    ctx.fillStyle = "#000";
+                    ctx.fillRect(0, 0, compositeCanvas.width, compositeCanvas.height);
+                    canvases.forEach(cnv => {
+                        const rect = cnv.getBoundingClientRect();
+                        const containerRect = imageContainer.getBoundingClientRect();
+                        const x = rect.left - containerRect.left;
+                        const y = rect.top - containerRect.top;
+                        ctx.drawImage(cnv, x, y, rect.width, rect.height);
+                    });
+                    canvas = compositeCanvas;
+                } else {
+                    canvas = element.querySelector("canvas");
+                }
+                if (!canvas) {
+                    updateStatus("Canvas not found");
+                    return;
+                }
+                const dataURL = canvas.toDataURL("image/png");
+                const link = document.createElement("a");
+                link.href = dataURL;
+                const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+                const currentImage = studyImages[currentImageIndex];
+                const patientId = currentImage ? currentImage.metadata.patient_id || 'unknown' : 'unknown';
+                link.download = `dicom-screenshot-${patientId}-${timestamp}.png`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                updateStatus("Screenshot saved");
+            } catch (error) {
+                updateStatus("Error capturing screenshot");
+            }
+        }
+
+        function onImageRendered(event) {
+            try {
+                updateViewportOverlay();
+            } catch (error) {}
+        }
+
+        function updateStatus(message) {
+        }
+
+        function updateFooterStatus(message) {
+            const footerStatus = document.getElementById("footerStatus");
+            if (footerStatus) {
+                footerStatus.textContent = message;
+            }
+        }
+
+        window.addEventListener('beforeunload', function() {
+            if (playbackInterval) clearInterval(playbackInterval);
+            try {
+                enabledElements.forEach(el => {
+                    try { cornerstone.disable(el); } catch (e) {}
+                });
+            } catch (error) {}
+        });
+
+        window.getPatientDataForReport = function() {
+            const currentImage = studyImages[currentImageIndex];
+            const metadata = currentImage ? currentImage.metadata : {};
+            return {
+                patientName: metadata.patient_name || "",
+                patientId: metadata.patient_id || "",
+                patientAge: calculateAge(metadata.patient_birth_date) || "",
+                patientGender: formatGender(metadata.patient_sex) || "",
+                examDate: formatDate(metadata.study_date) || "",
+                examTime: formatTime(metadata.study_time) || "",
+                modality: metadata.modality || "",
+                studyDescription: metadata.study_description || "",
+                institution: metadata.institution_name || "",
+                referringPhysician: metadata.referring_physician || "",
+                studyId: metadata.study_id || "",
+                accessionNumber: metadata.accession_number || "",
+                protocolName: metadata.protocol_name || ""
+            };
+        };
+
+        async function openMPRWindow() {
+            if (!studyImages || studyImages.length < 2) {
+                updateStatus("Need at least 2 slices for MPR");
+                return;
+            }
+
+            const modal = document.createElement('div');
+            modal.className = 'mpr-modal';
+            modal.innerHTML = `
+                <div class="mpr-panel" id="mpr-axial">
+                    <div class="mpr-toolbar"><span>Axial</span></div>
+                    <div class="mpr-canvas" id="mpr-canvas-axial"></div>
+                    <div class="mpr-controls"><input type="range" class="mpr-slider" id="mpr-slider-axial" min="0" max="0" value="0"/></div>
+                </div>
+                <div class="mpr-panel" id="mpr-sagittal">
+                    <div class="mpr-toolbar"><span>Sagittal</span></div>
+                    <div class="mpr-canvas" id="mpr-canvas-sagittal"></div>
+                    <div class="mpr-controls"><input type="range" class="mpr-slider" id="mpr-slider-sagittal" min="0" max="0" value="0"/></div>
+                </div>
+                <div class="mpr-panel" id="mpr-coronal">
+                    <div class="mpr-toolbar"><span>Coronal</span></div>
+                    <div class="mpr-canvas" id="mpr-canvas-coronal"></div>
+                    <div class="mpr-controls"><input type="range" class="mpr-slider" id="mpr-slider-coronal" min="0" max="0" value="0"/></div>
+                </div>
+                <button class="mpr-close" id="mpr-close">Close</button>
+            `;
+            document.body.appendChild(modal);
+
+            const closeBtn = document.getElementById('mpr-close');
+            closeBtn.addEventListener('click', () => {
+                try { document.body.removeChild(modal); } catch(e) {}
+            });
+
+            updateStatus('Preparing MPR...');
+
+            try {
+                const loaded = await Promise.all(studyImages.map(si => {
+                    return cornerstone.loadImage(si.imageId).then(img => ({ img, meta: si.metadata, id: si.imageId })).catch(e => null);
+                }));
+
+                const valid = loaded.filter(l => l && l.img && l.img.data);
+                if (valid.length < 2) {
+                    updateStatus('Not enough loadable slices for MPR');
+                    return;
+                }
+
+                const imgs = valid.map(v => v.img);
+                const metaList = valid.map(v => v.img.data);
+
+                const rows = imgs[0].rows || imgs[0].height || imgs[0].data?.rows || imgs[0].getSize?.rows || imgs[0].height;
+                const cols = imgs[0].columns || imgs[0].width || imgs[0].data?.cols || imgs[0].getSize?.cols || imgs[0].width;
+                const samplePixel = imgs[0].getPixelData();
+                const PixelArrayConstructor = samplePixel.constructor;
+
+                const positions = imgs.map(im => {
+                    try { return getImagePosition(im.data); } catch(e){ return null; }
+                });
+
+                const orient = getImageOrientation(imgs[0].data);
+                let sliceSpacing = 1;
+                let sorted = imgs.map((im, idx) => ({ im, pos: positions[idx] }));
+                const havePositions = positions.every(p => p && typeof p.z === 'number');
+                if (havePositions) {
+                    sorted.sort((a,b) => a.pos.z - b.pos.z);
+                    sliceSpacing = Math.abs(sorted[1].pos.z - sorted[0].pos.z) || 1;
+                } else {
+                    sorted = imgs.map(im => ({ im, pos: null }));
+                }
+
+                const sliceCount = sorted.length;
+                const r = imgs[0].rows || imgs[0].height;
+                const c = imgs[0].columns || imgs[0].width;
+
+                const volumeLength = r * c * sliceCount;
+                let volume;
+                if (PixelArrayConstructor === Uint8Array) volume = new Uint8Array(volumeLength);
+                else if (PixelArrayConstructor === Int16Array) volume = new Int16Array(volumeLength);
+                else if (PixelArrayConstructor === Uint16Array) volume = new Uint16Array(volumeLength);
+                else if (PixelArrayConstructor === Float32Array) volume = new Float32Array(volumeLength);
+                else volume = new Uint16Array(volumeLength);
+
+                for (let z = 0; z < sliceCount; z++) {
+                    const slicePixels = sorted[z].im.getPixelData();
+                    const offset = z * r * c;
+                    for (let i = 0; i < r * c; i++) {
+                        volume[offset + i] = slicePixels[i];
+                    }
+                }
+
+                function createCornerstoneImageObject(imgId, colsLocal, rowsLocal, pixels, rowPixelSpacing, colPixelSpacing) {
+                    const min = Math.min.apply(null, Array.prototype.slice.call(pixels, 0, Math.min(pixels.length, 100000)));
+                    const max = Math.max.apply(null, Array.prototype.slice.call(pixels, 0, Math.min(pixels.length, 100000)));
+                    return {
+                        imageId: imgId,
+                        minPixelValue: min,
+                        maxPixelValue: max,
+                        slope: 1.0,
+                        intercept: 0,
+                        rows: rowsLocal,
+                        columns: colsLocal,
+                        height: rowsLocal,
+                        width: colsLocal,
+                        columnPixelSpacing: colPixelSpacing || 1,
+                        rowPixelSpacing: rowPixelSpacing || 1,
+                        getPixelData: function() { return pixels; },
+                        render: cornerstone.renderWer,
+                        windowCenter: (min + max) / 2,
+                        windowWidth: (max - min)
+                    };
+                }
+
+                const axialStack = [];
+                for (let z = 0; z < sliceCount; z++) {
+                    const offset = z * r * c;
+                    const sliceArr = new PixelArrayConstructor(r * c);
+                    for (let i = 0; i < r * c; i++) sliceArr[i] = volume[offset + i];
+                    const imgObj = createCornerstoneImageObject('mpr:axial:' + z, c, r, sliceArr, imgs[0].rowPixelSpacing || (imgs[0].rowPixelSpacing || 1), imgs[0].columnPixelSpacing || (imgs[0].columnPixelSpacing || 1));
+                    axialStack.push(imgObj);
+                }
+
+                const coronalStack = [];
+                for (let y = 0; y < r; y++) {
+                    const sliceArr = new PixelArrayConstructor(c * sliceCount);
+                    for (let z = 0; z < sliceCount; z++) {
+                        const sliceOffset = z * r * c;
+                        for (let x = 0; x < c; x++) {
+                            const val = volume[sliceOffset + y * c + x];
+                            sliceArr[z * c + x] = val;
+                        }
+                    }
+                    const imgObj = createCornerstoneImageObject('mpr:coronal:' + y, c, sliceCount, sliceArr, sliceSpacing || 1, imgs[0].columnPixelSpacing || 1);
+                    coronalStack.push(imgObj);
+                }
+
+                const sagittalStack = [];
+                for (let x = 0; x < c; x++) {
+                    const sliceArr = new PixelArrayConstructor(r * sliceCount);
+                    for (let z = 0; z < sliceCount; z++) {
+                        const sliceOffset = z * r * c;
+                        for (let y = 0; y < r; y++) {
+                            const val = volume[sliceOffset + y * c + x];
+                            sliceArr[z * r + y] = val;
+                        }
+                    }
+                    const imgObj = createCornerstoneImageObject('mpr:sagittal:' + x, r, sliceCount, sliceArr, sliceSpacing || 1, imgs[0].rowPixelSpacing || 1);
+                    sagittalStack.push(imgObj);
+                }
+
+                const axialCanvasContainer = document.getElementById('mpr-canvas-axial');
+                const coronalCanvasContainer = document.getElementById('mpr-canvas-coronal');
+                const sagittalCanvasContainer = document.getElementById('mpr-canvas-sagittal');
+
+                axialCanvasContainer.innerHTML = '';
+                coronalCanvasContainer.innerHTML = '';
+                sagittalCanvasContainer.innerHTML = '';
+
+                const axialElem = document.createElement('div');
+                axialElem.className = 'cornerstone-element';
+                axialElem.style.width = '100%';
+                axialElem.style.height = '100%';
+                axialCanvasContainer.appendChild(axialElem);
+
+                const coronalElem = document.createElement('div');
+                coronalElem.className = 'cornerstone-element';
+                coronalElem.style.width = '100%';
+                coronalElem.style.height = '100%';
+                coronalCanvasContainer.appendChild(coronalElem);
+
+                const sagittalElem = document.createElement('div');
+                sagittalElem.className = 'cornerstone-element';
+                sagittalElem.style.width = '100%';
+                sagittalElem.style.height = '100%';
+                sagittalCanvasContainer.appendChild(sagittalElem);
+
+                cornerstone.enable(axialElem);
+                cornerstone.enable(coronalElem);
+                cornerstone.enable(sagittalElem);
+
+                function displayStack(elem, stack, index) {
+                    try {
+                        const image = stack[index];
+                        const viewport = cornerstone.getDefaultViewportForImage(elem, image);
+                        if (image.windowWidth && image.windowWidth > 0) viewport.voi = viewport.voi || {};
+                        cornerstone.displayImage(elem, image, viewport);
+                    } catch (e) {}
+                }
+
+                let axialIndex = Math.floor(axialStack.length / 2);
+                let coronalIndex = Math.floor(coronalStack.length / 2);
+                let sagittalIndex = Math.floor(sagittalStack.length / 2);
+
+                displayStack(axialElem, axialStack, axialIndex);
+                displayStack(coronalElem, coronalStack, coronalIndex);
+                displayStack(sagittalElem, sagittalStack, sagittalIndex);
+
+                const axialSlider = document.getElementById('mpr-slider-axial');
+                const coronalSlider = document.getElementById('mpr-slider-coronal');
+                const sagittalSlider = document.getElementById('mpr-slider-sagittal');
+
+                axialSlider.min = 0;
+                axialSlider.max = axialStack.length - 1;
+                axialSlider.value = axialIndex;
+
+                coronalSlider.min = 0;
+                coronalSlider.max = coronalStack.length - 1;
+                coronalSlider.value = coronalIndex;
+
+                sagittalSlider.min = 0;
+                sagittalSlider.max = sagittalStack.length - 1;
+                sagittalSlider.value = sagittalIndex;
+
+                axialSlider.addEventListener('input', function() {
+                    axialIndex = parseInt(this.value, 10);
+                    displayStack(axialElem, axialStack, axialIndex);
+                });
+
+                coronalSlider.addEventListener('input', function() {
+                    coronalIndex = parseInt(this.value, 10);
+                    displayStack(coronalElem, coronalStack, coronalIndex);
+                });
+
+                sagittalSlider.addEventListener('input', function() {
+                    sagittalIndex = parseInt(this.value, 10);
+                    displayStack(sagittalElem, sagittalStack, sagittalIndex);
+                });
+
+                axialElem.addEventListener('wheel', function(e) {
+                    e.preventDefault();
+                    const delta = e.deltaY > 0 ? 1 : -1;
+                    axialIndex = Math.min(Math.max(axialIndex + delta, 0), axialStack.length - 1);
+                    axialSlider.value = axialIndex;
+                    displayStack(axialElem, axialStack, axialIndex);
+                }, { passive: false });
+
+                coronalElem.addEventListener('wheel', function(e) {
+                    e.preventDefault();
+                    const delta = e.deltaY > 0 ? 1 : -1;
+                    coronalIndex = Math.min(Math.max(coronalIndex + delta, 0), coronalStack.length - 1);
+                    coronalSlider.value = coronalIndex;
+                    displayStack(coronalElem, coronalStack, coronalIndex);
+                }, { passive: false });
+
+                sagittalElem.addEventListener('wheel', function(e) {
+                    e.preventDefault();
+                    const delta = e.deltaY > 0 ? 1 : -1;
+                    sagittalIndex = Math.min(Math.max(sagittalIndex + delta, 0), sagittalStack.length - 1);
+                    sagittalSlider.value = sagittalIndex;
+                    displayStack(sagittalElem, sagittalStack, sagittalIndex);
+                }, { passive: false });
+
+                updateStatus('MPR ready');
+            } catch (error) {
+                updateStatus('MPR failed');
+            }
+        }
+    </script>
+</body>
+</html>

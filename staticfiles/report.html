@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="utf-8" />
+  <!--<meta name="viewport" content="width=device-width,initial-scale=1" />-->
+  <title>Medical Report</title>
+  <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+  <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Calibri', Arial, Helvetica, sans-serif;
+      background: #f5f5f5;
+      color: #000000;
+      overflow: hidden;
+    }
+    
+    .top-bar {
+      background: white;
+      border-bottom: 1px solid #ddd;
+      padding: 12px 20px;
+    }
+
+    .patient-info {
+      display: flex;
+      gap: 20px;
+      font-size: 14px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #eee;
+      margin-bottom: 10px;
+    }
+
+    .patient-info span {
+      color: #000000;
+    }
+
+    .patient-info strong {
+      color: #000000;
+      margin-left: 5px;
+    }
+
+    .controls-row {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .template-controls {
+      display: none;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .template-controls.visible {
+      display: flex;
+    }
+
+    .controls-row label {
+      font-size: 14px;
+      font-weight: 500;
+      color: #000000;
+    }
+
+    .controls-row select {
+      padding: 6px 12px;
+      font-size: 14px;
+      border: 1px solid #ccc;
+      border-radius: 3px;
+      background: white;
+      min-width: 150px;
+      color: #000000;
+    }
+
+    .right-controls {
+      margin-left: auto;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .submit-btn {
+      background: #0066cc;
+      color: white;
+      border: none;
+      padding: 7px 18px;
+      cursor: pointer;
+      border-radius: 3px;
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .submit-btn:hover {
+      background: #0052a3;
+    }
+
+    .submit-btn:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+
+    .status-msg {
+      padding: 6px 12px;
+      font-size: 14px;
+      border-radius: 3px;
+      display: none;
+    }
+
+    .status-msg.success {
+      display: inline-block;
+      background: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+
+    .status-msg.error {
+      display: inline-block;
+      background: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+
+    .main-container {
+      display: flex;
+      height: calc(100vh - 95px);
+      background: #f5f5f5;
+    }
+
+    .sidebar {
+      width: 250px;
+      background: white;
+      border-right: 1px solid #ddd;
+      padding: 15px;
+      overflow-y: auto;
+    }
+
+    .sidebar h3 {
+      font-size: 14px;
+      margin-bottom: 10px;
+      color: #000000;
+      font-weight: 600;
+    }
+
+    .sidebar select {
+      width: 100%;
+      padding: 8px;
+      margin-bottom: 15px;
+      border: 1px solid #ccc;
+      border-radius: 3px;
+      font-size: 14px;
+      color: #000000;
+    }
+
+    .content-area {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 20px;
+      overflow: auto;
+    }
+
+    .page-wrapper {
+      background: white;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      width: 320mm;
+      min-height: 297mm;
+      transform-origin: top center;
+    }
+
+    .page-content {
+      padding: 0.4in 0.7in;
+    }
+
+    .header-title {
+      text-align: center;
+      font-size: 18px;
+      font-weight: bold;
+      margin-bottom: 8px;
+      color: #000000;
+      letter-spacing: 0.5px;
+      border-bottom: 2px solid #000000;
+      padding-bottom: 6px;
+    }
+
+    .patient-header {
+      margin: 12px 0;
+      padding: 8px 0;
+      border-bottom: 1px solid #000000;
+      font-size: 18px;
+      line-height: 1.5;
+    }
+
+    .patient-row {
+      display: flex;
+      margin-bottom: 3px;
+    }
+
+    .patient-row label {
+      font-weight: 600;
+      min-width: 110px;
+      color: #000000;
+    }
+
+    .patient-row span {
+      color: #000000;
+    }
+
+    .section-title {
+      font-weight: bold;
+      text-decoration: underline;
+      margin: 12px 0 10px 0;
+      font-size: 18px;
+      color: #000000;
+    }
+
+    #editor {
+      background: white;
+      font-family: 'Calibri', Arial, sans-serif;
+      border: 1px solid #ddd;
+      margin-bottom: 15px;
+      min-height: 400px;
+    }
+
+    .ql-toolbar {
+      background: #fafafa;
+      border: 1px solid #ddd !important;
+      border-bottom: none !important;
+    }
+
+    .ql-container {
+      border: 1px solid #ddd !important;
+      font-family: 'Calibri', Arial, sans-serif;
+      font-size: 18px;
+    }
+
+    .ql-editor {
+      font-size: 18px;
+      line-height: 1.7;
+      font-family: 'Calibri', Arial, sans-serif;
+      padding: 18px;
+      min-height: 380px;
+      color: #000000;
+    }
+
+    .ql-editor p,
+    .ql-editor strong,
+    .ql-editor span,
+    .ql-editor li {
+      color: #000000 !important;
+    }
+
+    .doctor-signature {
+      margin-top: 45px;
+      text-align: left;
+    }
+
+    .sig-img {
+      margin-bottom: 4px;
+    }
+
+    .sig-img img {
+      max-width: 140px;
+      max-height: 60px;
+      display: block;
+    }
+
+    .signature-line {
+      margin: 2px 0;
+      font-size: 18px;
+      line-height: 1.3;
+      color: #000000;
+    }
+
+    .doctor-name {
+      font-weight: bold;
+      font-size: 18px;
+      margin-bottom: 2px;
+      color: #000000;
+    }
+
+    @media (max-width: 1400px) {
+      .sidebar {
+        display: none;
+      }
+      
+      .template-controls {
+        display: flex !important;
+      }
+    }
+
+    @media print {
+      body { background: white; }
+      .top-bar, .sidebar { display: none; }
+      .content-area { padding: 0; }
+      .page-wrapper { box-shadow: none; transform: none !important; }
+      .ql-toolbar { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <div class="patient-info">
+      <div><span>Patient:</span><strong id="hPatientName">-</strong></div>
+      <div><span>ID:</span><strong id="hPatientId">-</strong></div>
+      <div><span>Age:</span><strong id="hPatientAge">-</strong></div>
+      <div><span>Sex:</span><strong id="hPatientSex">-</strong></div>
+    </div>
+    
+    <div class="controls-row">
+      <div class="template-controls" id="navbarTemplates">
+        <label>Body Part:</label>
+        <select id="navBodyPart">
+          <option value="">All</option>
+        </select>
+        <label>Template:</label>
+        <select id="navTemplate">
+          <option value="">Select</option>
+        </select>
+      </div>
+
+      <div class="right-controls">
+        <label>Status:</label>
+        <select id="statusSelect">
+          <option value="Draft">Draft</option>
+          <option value="Reviewed">Reviewed</option>
+          <option value="Reported">Reported</option>
+        </select>
+        <button class="submit-btn" id="submitBtn">Submit Report</button>
+        <div class="status-msg" id="statusMsg"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="main-container">
+    <div class="sidebar" id="sidebar">
+      <h3>Body Part</h3>
+      <select id="bodyPartSelect">
+        <option value="">All Body Parts</option>
+      </select>
+
+      <h3>Template</h3>
+      <select id="templateSelect" size="6" style="height: auto;">
+        <option value="">Select Template</option>
+      </select>
+    </div>
+
+    <div class="content-area">
+      <div class="page-wrapper" id="pageWrapper">
+        <div class="page-content">
+          <div class="header-title">DEPARTMENT OF RADIOLOGY AND IMAGING</div>
+          
+          <div class="patient-header">
+            <div class="patient-row">
+              <label>Name :</label>
+              <span id="tName">-</span>
+            </div>
+            <div class="patient-row">
+              <label>Patient ID :</label>
+              <span id="tId">-</span>
+            </div>
+            <div class="patient-row">
+              <label>Age / Sex :</label>
+              <span id="tAgeSex">-</span>
+            </div>
+            <div class="patient-row">
+              <label>Ref by :</label>
+              <span id="tDoctor">-</span>
+            </div>
+            <div class="patient-row">
+              <label>Exam Date/Time :</label>
+              <span id="tExam">-</span>
+            </div>
+          </div>
+
+          <div class="section-title">Examination Procedure (Sonogram)</div>
+          <div id="editor"></div>
+          
+          <div class="doctor-signature">
+            <div class="sig-img" id="sigImg"></div>
+            <div class="signature-line doctor-name" id="sigName"></div>
+            <div class="signature-line" id="sigQual"></div>
+            <div class="signature-line" id="sigDesig"></div>
+            <div class="signature-line" id="sigInst"></div>
+            <div class="signature-line" id="sigBMDC"></div>
+            <div class="signature-line" id="sigMobile"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let quill;
+    let patientData = {};
+    let currentPatientId = null;
+    let doctorInfo = null;
+    let allTemplates = {};
+    const baseUrl = window.location.origin;
+    const token = localStorage.getItem('token');
+
+    function checkScreenSize() {
+      const navTemplates = document.getElementById('navbarTemplates');
+      if (window.innerWidth <= 1400) {
+        navTemplates.classList.add('visible');
+      } else {
+        navTemplates.classList.remove('visible');
+      }
+    }
+
+    function scalePaper() {
+      const paper = document.getElementById('pageWrapper');
+      const viewArea = document.querySelector('.content-area');
+      
+      const availHeight = viewArea.clientHeight - 40;
+      const paperHeight = 297 * 3.7795275591;
+      
+      const scale = Math.min(availHeight / paperHeight, 0.95);
+      paper.style.transform = `scale(${scale})`;
+    }
+
+    window.addEventListener('resize', () => {
+      checkScreenSize();
+      scalePaper();
+    });
+    window.addEventListener('load', () => {
+      checkScreenSize();
+      scalePaper();
+    });
+
+    async function checkAccess() {
+      if (!token) return false;
+
+      try {
+        const res = await fetch(`${baseUrl}/api/current-user/`, {
+          headers: {
+            'Authorization': `Token ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (!res.ok) return false;
+        const data = await res.json();
+        
+        if (!data.success || (data.role !== 'Doctor' && data.role !== 'Center')) return false;
+
+        doctorInfo = data;
+        updateSignature(data);
+        return true;
+
+      } catch (err) {
+        console.error('Access error:', err);
+        return false;
+      }
+    }
+
+    function updateSignature(doc) {
+      const name = doc.full_name || doc.doctor_name || '';
+      const qual = doc.qualification || '';
+      const desig = doc.designation || '';
+      const inst = doc.institute_name || doc.center_name || '';
+      const bmdc = doc.bmdc_reg_no || '';
+      const mobile = doc.contact_number || doc.mobile || doc.phone || '';
+      const sigUrl = doc.signature || '';
+      
+      document.getElementById('sigName').textContent = name;
+      document.getElementById('sigQual').textContent = qual;
+      document.getElementById('sigDesig').textContent = desig;
+      document.getElementById('sigInst').textContent = inst;
+      document.getElementById('sigBMDC').textContent = bmdc ? `BMDC Reg No: ${bmdc}` : '';
+      document.getElementById('sigMobile').textContent = mobile ? `Mobile: ${mobile}` : '';
+      
+      const sigImgDiv = document.getElementById('sigImg');
+      if (sigUrl) {
+        const fullUrl = sigUrl.startsWith('http') ? sigUrl : `${baseUrl}${sigUrl}`;
+        console.log('Signature URL:', fullUrl);
+        sigImgDiv.innerHTML = `<img src="${fullUrl}" alt="Signature" onerror="console.error('Signature load failed'); this.style.display='none';">`;
+      }
+    }
+
+    function initQuill() {
+      quill = new Quill('#editor', {
+        theme: 'snow',
+        modules: {
+          toolbar: [
+            ['bold', 'italic', 'underline'],
+            [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+            ['clean']
+          ]
+        },
+        placeholder: 'Start typing your report here or select a template...'
+      });
+
+      quill.setText('');
+      
+      setTimeout(() => quill.focus(), 200);
+    }
+
+    async function loadTemplates() {
+      try {
+        const res = await fetch(`${baseUrl}/api/report-templates/`, {
+          headers: {
+            'Authorization': `Token ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (!res.ok) return;
+        
+        const data = await res.json();
+        if (data.success && data.grouped) {
+          allTemplates = data.grouped;
+          populateBodyParts(data.grouped);
+          populateTemplates(data.grouped);
+        }
+      } catch (err) {
+        console.error('Template error:', err);
+      }
+    }
+
+    function populateBodyParts(grouped) {
+      const parts = Object.keys(grouped).sort();
+      
+      [document.getElementById('bodyPartSelect'), document.getElementById('navBodyPart')].forEach(select => {
+        select.innerHTML = '<option value="">All Body Parts</option>';
+        parts.forEach(bp => {
+          const opt = document.createElement('option');
+          opt.value = bp;
+          opt.textContent = bp;
+          select.appendChild(opt);
+        });
+      });
+    }
+
+    function populateTemplates(grouped, filterBP = '') {
+      const parts = filterBP ? [filterBP] : Object.keys(grouped).sort();
+      
+      [document.getElementById('templateSelect'), document.getElementById('navTemplate')].forEach(select => {
+        const isSidebar = select.id === 'templateSelect';
+        select.innerHTML = '<option value="">Select Template</option>';
+        
+        parts.forEach(bp => {
+          if (!grouped[bp]) return;
+          
+          grouped[bp].forEach(tmpl => {
+            const opt = document.createElement('option');
+            opt.value = tmpl.id;
+            opt.textContent = isSidebar ? `${bp} - ${tmpl.template_name}` : tmpl.template_name;
+            opt.dataset.content = tmpl.content;
+            opt.dataset.bodypart = tmpl.body_part;
+            select.appendChild(opt);
+          });
+        });
+      });
+    }
+
+    function handleTemplateChange(selectEl) {
+      const opt = selectEl.options[selectEl.selectedIndex];
+      
+      if (opt.value && opt.dataset.content) {
+        quill.root.innerHTML = opt.dataset.content;
+        
+        if (opt.dataset.bodypart) {
+          document.getElementById('bodyPartSelect').value = opt.dataset.bodypart;
+          document.getElementById('navBodyPart').value = opt.dataset.bodypart;
+        }
+        
+        setTimeout(() => quill.focus(), 100);
+      }
+    }
+
+    document.getElementById('bodyPartSelect').addEventListener('change', function() {
+      populateTemplates(allTemplates, this.value);
+      document.getElementById('navBodyPart').value = this.value;
+    });
+
+    document.getElementById('navBodyPart').addEventListener('change', function() {
+      populateTemplates(allTemplates, this.value);
+      document.getElementById('bodyPartSelect').value = this.value;
+    });
+
+    document.getElementById('templateSelect').addEventListener('change', function() {
+      handleTemplateChange(this);
+      document.getElementById('navTemplate').value = this.value;
+    });
+
+    document.getElementById('navTemplate').addEventListener('change', function() {
+      handleTemplateChange(this);
+      document.getElementById('templateSelect').value = this.value;
+    });
+
+    function updatePatientInfo(data) {
+      const name = data.patientName || 'Unknown';
+      const id = data.patientId || 'N/A';
+      const age = (data.patientAge && parseInt(data.patientAge) !== 0) ? data.patientAge : 'N/A';
+      const sex = (data.patientGender || 'U').toString().charAt(0).toUpperCase();
+      const doctor = (data.referringPhysician && data.referringPhysician.trim() !== '') ? data.referringPhysician : 'N/A';
+      
+      const now = new Date();
+      const dt = `${String(now.getDate()).padStart(2,'0')}-${String(now.getMonth()+1).padStart(2,'0')}-${now.getFullYear()} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+      
+      document.getElementById('hPatientName').textContent = name;
+      document.getElementById('hPatientId').textContent = id;
+      document.getElementById('hPatientAge').textContent = age;
+      document.getElementById('hPatientSex').textContent = sex;
+      
+      document.getElementById('tName').textContent = name;
+      document.getElementById('tId').textContent = id;
+      document.getElementById('tAgeSex').textContent = `${age} / ${sex}`;
+      document.getElementById('tDoctor').textContent = doctor;
+      document.getElementById('tExam').textContent = dt;
+    }
+
+    function handleData(data) {
+      patientData = data;
+      
+      if (data.dicomImageId) {
+        currentPatientId = parseInt(data.dicomImageId) || data.dicomImageId;
+      } else if (data.patientId) {
+        currentPatientId = parseInt(data.patientId) || data.patientId;
+      }
+      
+      console.log('Current Patient ID:', currentPatientId);
+      updatePatientInfo(data);
+    }
+
+    function showMsg(msg, type) {
+      const el = document.getElementById('statusMsg');
+      el.textContent = msg;
+      el.className = `status-msg ${type}`;
+      setTimeout(() => {
+        el.className = 'status-msg';
+      }, 5000);
+    }
+
+    async function generateDoc() {
+      const name = document.getElementById('tName').textContent;
+      const id = document.getElementById('tId').textContent;
+      const ageSex = document.getElementById('tAgeSex').textContent;
+      const dt = document.getElementById('tExam').textContent;
+      const doc = document.getElementById('tDoctor').textContent;
+      const report = quill.root.innerHTML;
+      
+      const dName = doctorInfo.full_name || '';
+      const dDesig = doctorInfo.designation || '';
+      const dQual = doctorInfo.qualification || '';
+      const dInst = doctorInfo.institute_name || '';
+      const dBMDC = doctorInfo.bmdc_reg_no ? `BMDC Reg No: ${doctorInfo.bmdc_reg_no}` : '';
+      const dMobile = doctorInfo.mobile || '';
+      const dSig = doctorInfo.signature || '';
+
+      let sigTag = '';
+      if (dSig) {
+        const fullUrl = dSig.startsWith('http') ? dSig : `${baseUrl}${dSig}`;
+        sigTag = `<div class="sig-img"><img src="${fullUrl}" style="max-width: 140px; max-height: 60px;"></div>`;
+      }
+
+      const html = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    @page { size: A4; margin: 0.4in 0.7in; }
+    body { font-family: Calibri, Arial, sans-serif; font-size: 18px; line-height: 1.7; margin: 0; color: #000000; }
+    .title { text-align: center; font-weight: bold; font-size: 18px; margin-bottom: 8px; letter-spacing: 0.5px; border-bottom: 2px solid #000000; padding-bottom: 6px; color: #000000; }
+    .patient-header { margin: 12px 0; padding: 8px 0; border-bottom: 1px solid #000000; font-size: 18px; line-height: 1.5; }
+    .patient-row { display: flex; margin-bottom: 3px; }
+    .patient-row label { font-weight: 600; min-width: 110px; color: #000000; }
+    .patient-row span { color: #000000; }
+    .section { font-weight: bold; text-decoration: underline; margin: 12px 0 10px 0; font-size: 18px; color: #000000; }
+    .content { font-size: 18px; line-height: 1.7; color: #000000; }
+    .content p, .content strong, .content span, .content li { color: #000000 !important; }
+    .signature { margin-top: 45px; page-break-inside: avoid; }
+    .signature div { margin: 2px 0; font-size: 18px; line-height: 1.3; color: #000000; }
+    .sig-name { font-weight: bold; font-size: 18px; color: #000000; }
+    .sig-img { margin-bottom: 4px; }
+    p { margin: 5px 0; color: #000000; }
+    strong { font-weight: bold; color: #000000; }
+    ul, ol { margin: 5px 0; padding-left: 25px; }
+    img { display: block; }
+  </style>
+</head>
+<body>
+  <div class="title">DEPARTMENT OF RADIOLOGY AND IMAGING</div>
+  <div class="patient-header">
+    <div class="patient-row"><label>Name :</label><span>${name}</span></div>
+    <div class="patient-row"><label>Patient ID :</label><span>${id}</span></div>
+    <div class="patient-row"><label>Age / Sex :</label><span>${ageSex}</span></div>
+    <div class="patient-row"><label>Ref by :</label><span>${doc}</span></div>
+    <div class="patient-row"><label>Exam Date/Time :</label><span>${dt}</span></div>
+  </div>
+  <div class="section">Examination Procedure (Sonogram)</div>
+  <div class="content">${report}</div>
+  <div class="signature">
+    ${sigTag}
+    <div class="sig-name">${dName}</div>
+    <div>${dQual}</div>
+    <div>${dDesig}</div>
+    <div>${dInst}</div>
+    <div>${dBMDC}</div>
+    ${dMobile ? `<div>Mobile: ${dMobile}</div>` : ''}
+  </div>
+</body>
+</html>`;
+
+      const blob = new Blob([html], { type: 'application/msword' });
+      const ts = new Date().toISOString().slice(0, 19).replace(/[-:]/g, '');
+      const filename = `Report_${currentPatientId}_${ts}.doc`;
+
+      return { blob, filename };
+    }
+
+    document.getElementById('submitBtn').addEventListener('click', async function() {
+      const btn = this;
+      const stat = document.getElementById('statusSelect').value;
+      
+      if (!token) {
+        showMsg('Authentication required', 'error');
+        return;
+      }
+      
+      if (!currentPatientId) {
+        showMsg('Patient ID not found', 'error');
+        console.error('No patient ID available');
+        return;
+      }
+
+      const reportText = quill.getText().trim();
+      const reportHTML = quill.root.innerHTML.trim();
+      
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = reportHTML;
+      const actualText = tempDiv.textContent.trim();
+      
+      if (!actualText || actualText.length < 5) {
+        showMsg('Please enter report content', 'error');
+        return;
+      }
+      
+      try {
+        btn.disabled = true;
+        showMsg('Saving report...', 'success');
+
+        console.log('Generating document for patient ID:', currentPatientId);
+        const { blob, filename } = await generateDoc();
+        
+        const fd = new FormData();
+        fd.append('file', blob, filename);
+
+        console.log('Uploading report to:', `${baseUrl}/api/dicom-images/${currentPatientId}/upload_report/`);
+        const upRes = await fetch(`${baseUrl}/api/dicom-images/${currentPatientId}/upload_report/`, {
+          method: 'POST',
+          headers: { 'Authorization': `Token ${token}` },
+          body: fd
+        });
+
+        if (!upRes.ok) {
+          const errText = await upRes.text();
+          console.error('Upload failed:', upRes.status, errText);
+          throw new Error(`Upload failed: ${upRes.status}`);
+        }
+
+        const uploadData = await upRes.json();
+        console.log('Upload response:', uploadData);
+
+        console.log('Updating status to:', stat);
+        const stRes = await fetch(`${baseUrl}/api/dicom-images/${currentPatientId}/update_status/`, {
+          method: 'PATCH',
+          headers: {
+            'Authorization': `Token ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            status: stat,
+            reported_by: doctorInfo.full_name || '',
+            report_content: quill.root.innerHTML
+          })
+        });
+
+        if (!stRes.ok) {
+          const errText = await stRes.text();
+          console.error('Status update failed:', stRes.status, errText);
+          throw new Error(`Status update failed: ${stRes.status}`);
+        }
+
+        const statusData = await stRes.json();
+        console.log('Status update response:', statusData);
+
+        showMsg('Report saved successfully', 'success');
+        setTimeout(() => window.close(), 2000);
+
+      } catch (err) {
+        console.error('Submit error:', err);
+        showMsg(`Error: ${err.message}`, 'error');
+        btn.disabled = false;
+      }
+    });
+
+    document.addEventListener('DOMContentLoaded', async function() {
+      console.log('Initializing application...');
+      const access = await checkAccess();
+      
+      if (access) {
+        console.log('Access granted, initializing editor...');
+        initQuill();
+        await loadTemplates();
+        
+        setTimeout(() => {
+          checkScreenSize();
+          scalePaper();
+        }, 100);
+        
+        window.addEventListener('message', (e) => {
+          if (e.data?.type === 'patientData' && e.data?.data) {
+            console.log('Received patient data via postMessage:', e.data.data);
+            handleData(e.data.data);
+          }
+        });
+
+        setTimeout(() => {
+          try {
+            const saved = sessionStorage.getItem('patientDataForReport');
+            if (saved) {
+              const data = JSON.parse(saved);
+              if (data && Object.keys(data).length > 0) {
+                console.log('Loaded patient data from session:', data);
+                handleData(data);
+              }
+            }
+          } catch (e) {
+            console.error('Session error:', e);
+          }
+        }, 500);
+      } else {
+        console.error('Access denied');
+        showMsg('Access denied', 'error');
+      }
+    });
+  </script>
+</body>
+</html>
